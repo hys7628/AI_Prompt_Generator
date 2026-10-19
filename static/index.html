@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI 프롬프트 생성기</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- ───── 비밀번호 화면 ───── -->
+  <div id="login" class="overlay" hidden>
+    <form id="loginForm" class="login-box">
+      <h2>🔒 비밀번호</h2>
+      <p class="muted">내 OpenAI 키로 동작하는 사이트라 비밀번호가 필요해요.</p>
+      <input id="pw" type="password" placeholder="접속 비밀번호" autocomplete="current-password" required>
+      <button class="btn primary" type="submit">들어가기</button>
+      <p id="loginError" class="error"></p>
+    </form>
+  </div>
+
+  <header class="top">
+    <h1>✨ AI 프롬프트 생성기</h1>
+    <nav class="tabs">
+      <button class="tab active" data-tab="generator">생성기</button>
+      <button class="tab" data-tab="library">기법 카드</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- ───── 탭 1 : 생성기 ───── -->
+    <section id="generator" class="panel">
+      <form id="taskForm" class="card form">
+        <label><span>작업 <span class="req">*</span></span>
+          <textarea id="task" rows="2" placeholder="예) 고객 클레임 이메일 답장 작성" required></textarea>
+        </label>
+        <label>원하는 결과물
+          <textarea id="goal" rows="2" placeholder="예) 고객이 화가 풀리고 우리 회사를 신뢰하게 하는 답장"></textarea>
+        </label>
+        <label>피해야 할 것
+          <textarea id="avoid" rows="2" placeholder="예) 방어적 태도, 책임 회피, 형식적인 사과"></textarea>
+        </label>
+        <div id="forced" class="forced" hidden></div>
+        <div class="row">
+          <button type="button" id="fillExample" class="btn">예시 채우기</button>
+          <button type="submit" id="recommendBtn" class="btn primary">🔍 기법 추천받기</button>
+        </div>
+      </form>
+
+      <div id="status" class="status" hidden></div>
+
+      <!-- 추천 대시보드 -->
+      <div id="dashboard" hidden>
+        <p id="summary" class="summary"></p>
+        <div id="recCards" class="rec-grid"></div>
+      </div>
+
+      <!-- APE 최종 결과 -->
+      <div id="final" class="card final" hidden></div>
+    </section>
+
+    <!-- ───── 탭 2 : 기법 카드 ───── -->
+    <section id="library" class="panel" hidden>
+      <div class="filters">
+        <input id="search" type="search" placeholder="기법 검색 (예: 페르소나, 협상)">
+        <div class="chips" id="dayChips">
+          <button class="chip active" data-day="all">전체</button>
+          <button class="chip" data-day="1">DAY 1</button>
+          <button class="chip" data-day="2">DAY 2</button>
+          <button class="chip" data-day="3">DAY 3</button>
+        </div>
+      </div>
+      <div id="techGrid" class="tech-grid"></div>
+    </section>
+  </main>
+
+  <footer class="foot muted">AI가 만든 결과는 초안이에요. 숫자·사실은 꼭 직접 확인하세요.</footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+# Render 설정 파일 (Blueprint)
+# Render 대시보드 → New → Blueprint → 이 저장소 선택하면 아래대로 자동 생성됩니다.
+services:
+  - type: web
+    name: ai-prompt-generator
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    # AI 응답이 길게 걸릴 수 있어 timeout을 120초로
+    startCommand: gunicorn app:app --timeout 120 --workers 1 --threads 4
+    envVars:
+      - key: OPENAI_MODEL
+        value: gpt-6.1-sol-light
+      - key: OPENAI_API_KEY
+        sync: false   # 대시보드에서 직접 입력 (코드에 남기지 않음)
+      - key: APP_PASSWORD
+        sync: false

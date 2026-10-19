@@ -1,0 +1,11 @@
+# 비밀 정보 (절대 GitHub에 올리지 않기)
+.env
+
+# 파이썬 가상환경 · 캐시
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+
+# Claude Code 개인 설정
+.claude/settings.local.json

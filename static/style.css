@@ -1,0 +1,140 @@
+/* ───── 색상 (밝은 / 어두운 화면 모두) ───── */
+:root {
+  --bg: #f5f7fb;
+  --card: #ffffff;
+  --text: #1c2333;
+  --muted: #667085;
+  --line: #e3e8f0;
+  --primary: #2f6fed;
+  --primary-soft: #e8f0fe;
+  --code: #f2f4f8;
+  --good: #12a150;
+  --warn: #e08a00;
+  --bad: #d92d20;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f1420;
+    --card: #182030;
+    --text: #e6eaf2;
+    --muted: #98a2b3;
+    --line: #2a3446;
+    --primary: #5b8ff9;
+    --primary-soft: #1e2b45;
+    --code: #111827;
+  }
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR", sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+}
+main, .top, .foot { max-width: 1100px; margin: 0 auto; padding: 0 16px; }
+[hidden] { display: none !important; }
+.muted { color: var(--muted); }
+.error { color: var(--bad); min-height: 1.4em; margin: 0; }
+
+/* ───── 머리글 · 탭 ───── */
+.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding-top: 20px; padding-bottom: 12px; }
+.top h1 { font-size: 1.5rem; margin: 0; }
+.tabs { display: flex; gap: 4px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 4px; }
+.tab { border: 0; background: none; color: var(--muted); font: inherit; font-weight: 600; padding: 8px 16px; border-radius: 8px; cursor: pointer; }
+.tab.active { background: var(--primary); color: #fff; }
+
+/* ───── 공통 부품 ───── */
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 20px; }
+.btn { font: inherit; font-weight: 600; border: 1px solid var(--line); background: var(--card); color: var(--text); border-radius: 10px; padding: 10px 16px; cursor: pointer; min-height: 44px; }
+.btn:hover { border-color: var(--primary); }
+.btn.primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+.btn.small { min-height: 34px; padding: 4px 12px; font-size: 0.875rem; }
+.btn:disabled { opacity: 0.5; cursor: wait; }
+.row { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+
+/* ───── 입력 폼 ───── */
+.form { display: grid; gap: 14px; margin-bottom: 16px; }
+.form label { display: grid; gap: 6px; font-weight: 600; }
+.req { color: var(--bad); }
+textarea, input[type=password], input[type=search] {
+  font: inherit; width: 100%; padding: 10px 12px; border-radius: 10px;
+  border: 1px solid var(--line); background: var(--bg); color: var(--text); resize: vertical;
+}
+textarea:focus, input:focus { outline: 2px solid var(--primary); outline-offset: -1px; }
+.forced { background: var(--primary-soft); border-radius: 10px; padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+
+.status { text-align: center; padding: 24px; color: var(--muted); }
+.status.err { color: var(--bad); }
+.spinner { display: inline-block; width: 18px; height: 18px; border: 3px solid var(--line); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: -3px; margin-right: 8px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ───── 추천 대시보드 ───── */
+.summary { font-weight: 600; margin: 8px 0 12px; }
+.rec-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+.rec { display: flex; flex-direction: column; gap: 12px; }
+.rec.chosen { outline: 3px solid var(--primary); }
+.rec-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.rec-head h3 { margin: 0; font-size: 1.125rem; }
+.badge { display: inline-block; font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: var(--primary-soft); color: var(--primary); }
+.score { text-align: right; min-width: 64px; }
+.score b { font-size: 1.5rem; color: var(--primary); }
+.meter { height: 6px; background: var(--line); border-radius: 999px; overflow: hidden; }
+.meter span { display: block; height: 100%; background: var(--primary); }
+.reason { margin: 0; padding-left: 18px; }
+.box-title { display: flex; justify-content: space-between; align-items: center; font-weight: 700; font-size: 0.875rem; color: var(--muted); }
+pre.prompt {
+  margin: 4px 0 0; background: var(--code); border: 1px solid var(--line); border-radius: 10px;
+  padding: 12px; white-space: pre-wrap; word-break: break-word; font-size: 0.875rem; max-height: 260px; overflow: auto;
+}
+.example { background: var(--bg); border-left: 4px solid var(--good); border-radius: 8px; padding: 10px 12px; font-size: 0.875rem; white-space: pre-wrap; word-break: break-word; max-height: 220px; overflow: auto; }
+.rec .btn.primary { margin-top: auto; }
+
+/* ───── APE 최종 결과 ───── */
+.final { margin-top: 20px; display: grid; gap: 16px; }
+.final h2 { margin: 0; }
+.table-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 0.875rem; }
+th, td { border-bottom: 1px solid var(--line); padding: 8px; text-align: center; white-space: nowrap; }
+td.left, th.left { text-align: left; white-space: normal; min-width: 160px; }
+tr.picked td { background: var(--primary-soft); font-weight: 600; }
+.final pre.prompt { max-height: none; font-size: 0.95rem; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.two ul { margin: 6px 0 0; padding-left: 18px; }
+.open-links { display: flex; gap: 8px; flex-wrap: wrap; }
+.open-links a { text-decoration: none; }
+
+/* ───── 기법 카드 ───── */
+.filters { display: grid; gap: 10px; margin-bottom: 16px; }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip { font: inherit; border: 1px solid var(--line); background: var(--card); color: var(--text); border-radius: 999px; padding: 6px 14px; cursor: pointer; }
+.chip.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+.tech-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+.tech { display: flex; flex-direction: column; gap: 8px; }
+.tech h3 { margin: 0; font-size: 1.05rem; }
+.tech p { margin: 0; }
+.tech .when { font-size: 0.875rem; color: var(--muted); }
+.tech details summary { cursor: pointer; font-weight: 600; font-size: 0.875rem; }
+.tech .row { margin-top: auto; justify-content: flex-start; }
+
+/* ───── 로그인 ───── */
+.overlay { position: fixed; inset: 0; background: rgba(10, 15, 25, 0.6); display: grid; place-items: center; z-index: 10; padding: 16px; }
+.login-box { background: var(--card); border-radius: 16px; padding: 24px; width: 100%; max-width: 360px; display: grid; gap: 12px; }
+.login-box h2 { margin: 0; }
+.login-box p { margin: 0; }
+
+.toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--text); color: var(--bg); padding: 8px 16px; border-radius: 999px; font-weight: 600; z-index: 20; }
+.foot { text-align: center; font-size: 0.875rem; padding-top: 32px; padding-bottom: 32px; }
+
+/* ───── 휴대폰 (가로 768px 이하) ───── */
+@media (max-width: 768px) {
+  .top h1 { font-size: 1.25rem; }
+  .tabs { width: 100%; }
+  .tab { flex: 1; }
+  .rec-grid, .tech-grid { grid-template-columns: 1fr; }
+  .two { grid-template-columns: 1fr; }
+  .row .btn { flex: 1; }
+  .card { padding: 16px; }
+}
