@@ -49,8 +49,8 @@ async function copyText(text) {
   }
 }
 
-function copyButton(getText, label = "복사") {
-  return el("button", { class: "btn small", type: "button", text: label, onclick: () => copyText(getText()) });
+function copyButton(getText, label = "복사", className = "btn small") {
+  return el("button", { class: className, type: "button", text: label, onclick: () => copyText(getText()) });
 }
 
 // 서버에 요청 보내기 (비밀번호를 머리글에 함께)
@@ -151,14 +151,12 @@ function renderDashboard(data) {
   $("summary").textContent = data.summary ? "📌 " + data.summary : "";
   const cards = (data.recommendations || []).map((rec, i) => {
     const score = Math.max(0, Math.min(100, Number(rec.fit_score) || 0));
-    const card = el("article", { class: "card rec" },
+    const card = el("article", { class: `card rec tone-${i % 3}` },
       el("div", { class: "rec-head" },
-        el("div", {},
-          el("span", { class: "badge", text: `${i + 1}순위 · ${rec.group}` }),
-          el("h3", { text: rec.name }),
-        ),
-        el("div", { class: "score" }, el("b", { text: String(score) }), el("div", { class: "muted", text: "적합도" })),
+        el("span", { class: "badge", text: `${i + 1}순위 · ${rec.group}` }),
+        el("span", { class: "fit", text: `${score}% 잘 맞아요` }),
       ),
+      el("h3", { text: rec.name }),
       el("div", { class: "meter" }, el("span", { style: `width:${score}%` })),
       el("ul", { class: "reason" }, (rec.reason || []).slice(0, 2).map((line) => el("li", { text: line }))),
       el("div", {},
@@ -214,9 +212,18 @@ function renderFinal(data) {
   });
 
   const prompt = data.final_prompt || "";
+  const totals = (data.candidates || []).map((c) => Number(c.total) || 0);
+  const best = totals.length ? Math.max(...totals) : null;
   const box = $("final");
   box.replaceChildren(
-    el("h2", { text: `⭐ 최종 프롬프트 · ${data.technique}` }),
+    el("div", { class: "final-hero" },
+      best === null ? null : el("div", { class: "sun", "aria-label": `최고 후보 점수 ${best}점` },
+        el("b", { text: String(best) }), el("small", { text: "최고 점수" })),
+      el("div", {},
+        el("h2", { text: "최종 프롬프트가 완성됐어요" }),
+        el("p", { class: "muted", text: `${data.technique} 기법 · 후보 ${totals.length}개 중 상위 후보의 장점을 합쳤어요` }),
+      ),
+    ),
     el("div", { class: "table-wrap" },
       el("table", {},
         el("thead", {}, el("tr", {},
@@ -226,9 +233,9 @@ function renderFinal(data) {
         el("tbody", {}, rows),
       ),
     ),
-    el("p", { class: "muted", text: "파란 줄 = 장점을 합친 상위 후보" }),
+    el("p", { class: "muted", text: "색칠된 줄 = 장점을 합친 상위 후보" }),
     el("div", {},
-      el("div", { class: "box-title" }, el("span", { text: "📋 바로 복사해서 쓰세요" }), copyButton(() => prompt)),
+      el("div", { class: "box-title" }, el("span", { text: "📋 바로 복사해서 쓰세요" }), copyButton(() => prompt, "복사하기", "btn small pill fill")),
       el("pre", { class: "prompt", text: prompt }),
     ),
     el("div", { class: "two" },
@@ -247,32 +254,60 @@ function renderFinal(data) {
 
 // 링크를 누르면 프롬프트를 먼저 복사해 두고 새 탭으로 연다
 function openLink(label, url, prompt) {
-  return el("a", { class: "btn", href: url, target: "_blank", rel: "noopener", text: label, onclick: () => copyText(prompt) });
+  return el("a", { class: "btn pill", href: url, target: "_blank", rel: "noopener", text: label, onclick: () => copyText(prompt) });
 }
 
 // ───── 기법 카드 탭 ─────
 
 let topicFilter = "all";
 
-// 카드 한 장 만들기
-function techCard(t) {
-  return el("article", { class: "card tech" },
-    el("h3", { text: t.name }),
-    el("p", { text: t.summary }),
-    el("p", { class: "when", text: "💡 이럴 때: " + t.when }),
-    el("details", {},
-      el("summary", { text: "뼈대 보기" }),
-      el("pre", { class: "prompt", text: t.how }),
+// 기법마다 붙는 동그란 아이콘
+const ICONS = {
+  narrative: "📖", instruction: "📋", function: "🧮", markdown: "#️⃣", strength_tone: "🔊",
+  persona: "🎭", user_persona: "👂", multi_perspective: "👀",
+  few_shot: "🧁", infinite: "♾️", meta_language: "⌨️",
+  flipped: "🙋", question_refinement: "✏️", game_play: "🎲", context: "🗺️", outline: "🌳", recipe: "🍳", alternatives: "🔀",
+  cognitive_verifier: "🧩", fact_check: "🚦", reflection: "🪞", deliberate: "🤔", ape: "🤖",
+  "5w1h": "❓", co_star: "⭐", focus: "🎯", roses: "🌹", risen: "🌅", bab: "🌉",
+};
+const TILE_SHAPES = ["sq", "circle", "tri", "circle", "tri", "sq"];
+
+function topicIndex(name) { return Math.max(0, topics.findIndex((tp) => tp.name === name)); }
+
+// 기법 한 줄 (누르면 펼쳐져서 뼈대·예시·버튼이 보임)
+function techItem(t) {
+  return el("details", { class: "tech" },
+    el("summary", {},
+      el("span", { class: `ico tone-t${topicIndex(t.group)}`, "aria-hidden": "true", text: ICONS[t.id] || "✨" }),
+      el("span", { class: "tech-text" },
+        el("b", { text: t.name }),
+        el("span", { class: "muted", text: t.summary }),
+      ),
+      el("span", { class: "chev", "aria-hidden": "true", text: "›" }),
     ),
-    el("details", {},
-      el("summary", { text: "수업 예시 프롬프트" }),
-      el("pre", { class: "prompt", text: t.example }),
-    ),
-    el("div", { class: "row" },
-      copyButton(() => t.example, "예시 복사"),
-      el("button", { class: "btn small primary", type: "button", text: "이 기법으로 생성 →", onclick: () => useTechnique(t.id) }),
+    el("div", { class: "tech-body" },
+      el("p", { class: "when", text: "💡 이럴 때: " + t.when }),
+      el("details", {},
+        el("summary", { text: "뼈대 보기" }),
+        el("pre", { class: "prompt", text: t.how }),
+      ),
+      el("details", {},
+        el("summary", { text: "수업 예시 프롬프트" }),
+        el("pre", { class: "prompt", text: t.example }),
+      ),
+      el("div", { class: "row" },
+        copyButton(() => t.example, "예시 복사"),
+        el("button", { class: "btn small primary", type: "button", text: "이 기법으로 생성 →", onclick: () => useTechnique(t.id) }),
+      ),
     ),
   );
+}
+
+function pickTopic(name) {
+  topicFilter = name;
+  renderTopicChips();
+  renderLibrary();
+  $("library").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 // 위쪽 주제 버튼 [전체 | 주제1 | 주제2 …]
@@ -283,13 +318,31 @@ function renderTopicChips() {
       class: "chip" + (c.name === topicFilter ? " active" : ""),
       type: "button",
       text: c.label,
-      onclick: () => { topicFilter = c.name; renderTopicChips(); renderLibrary(); },
+      onclick: () => pickTopic(c.name),
     })));
 }
 
-// 주제별로 제목 + 카드 묶음 그리기
+// 주제 타일 6개 (전체 화면에서 검색어가 없을 때)
+function renderTiles() {
+  return el("div", { class: "tiles" }, topics.map((tp, i) => {
+    const count = techniques.filter((t) => t.group === tp.name).length;
+    return el("button", { class: `tile tone-t${i}`, type: "button", onclick: () => pickTopic(tp.name) },
+      el("span", { class: "tile-name", text: tp.name }),
+      el("span", { class: "tile-desc", text: tp.desc }),
+      el("span", { class: "tile-count", text: `${count}개` }),
+      el("i", { class: `shape ${TILE_SHAPES[i % TILE_SHAPES.length]}`, "aria-hidden": "true" }),
+    );
+  }));
+}
+
+// 기법 카드 탭 그리기: 전체 → 주제 타일 / 주제를 고르거나 검색 → 목록
 function renderLibrary() {
   const q = $("search").value.trim().toLowerCase();
+  if (topicFilter === "all" && !q) {
+    $("techGrid").replaceChildren(renderTiles());
+    return;
+  }
+
   const sections = topics
     .filter((tp) => topicFilter === "all" || tp.name === topicFilter)
     .map((tp) => {
@@ -302,12 +355,15 @@ function renderLibrary() {
           el("h2", { text: `${tp.name} ` }, el("span", { class: "count", text: `${list.length}` })),
           el("p", { class: "muted", text: tp.desc }),
         ),
-        el("div", { class: "tech-grid" }, list.map(techCard)),
+        el("div", { class: "card tech-list" }, list.map(techItem)),
       );
     })
     .filter(Boolean);
 
-  $("techGrid").replaceChildren(...sections);
+  const back = topicFilter !== "all"
+    ? el("button", { class: "btn small back", type: "button", text: "← 주제 전체 보기", onclick: () => pickTopic("all") })
+    : null;
+  $("techGrid").replaceChildren(...[back, ...sections].filter(Boolean));
   if (!sections.length) $("techGrid").append(el("p", { class: "muted", text: "검색 결과가 없어요." }));
 }
 

@@ -5,13 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>AI 프롬프트 생성기</title>
   <!-- 휴대폰: 주소창 색, 홈 화면에 추가했을 때 앱처럼 보이게 -->
-  <meta name="theme-color" content="#f5f7fb" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#0f1420" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#f4effc" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#1b1726" media="(prefers-color-scheme: dark)">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="프롬프트">
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <!-- 제목·버튼용 귀여운 둥근 글꼴 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&display=swap">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -38,6 +42,11 @@
     <!-- ───── 탭 1 : 생성기 ───── -->
     <section id="generator" class="panel">
       <form id="taskForm" class="card form">
+        <!-- 말 거는 캐릭터 -->
+        <div class="mascot">
+          <span class="buddy" aria-hidden="true"></span>
+          <p class="bubble">어떤 작업을 도와줄까요?</p>
+        </div>
         <label><span>작업 <span class="req">*</span></span>
           <textarea id="task" rows="2" placeholder="예) 고객 클레임 이메일 답장 작성" required></textarea>
         </label>
