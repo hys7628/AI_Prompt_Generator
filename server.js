@@ -15,7 +15,7 @@
 import crypto from "node:crypto";
 import express from "express";
 import OpenAI from "openai";
-import { TECHNIQUES, TECHNIQUE_BY_ID } from "./techniques.js";
+import { TECHNIQUES, TECHNIQUE_BY_ID, TOPICS } from "./techniques.js";
 
 const OPENAI_MODEL = process.env.OPENAI_MODEL || "gpt-6.1-sol";
 const APP_PASSWORD = process.env.APP_PASSWORD || "";
@@ -116,7 +116,7 @@ function recommendSystemPrompt(forcedIds) {
   return `너는 프롬프트 엔지니어링 코치야. 사용자가 준 작업에 맞는 프롬프트 기법을 추천하고,
 각 기법을 적용한 실제 프롬프트와 그 프롬프트를 실행했을 때의 예시 결과물을 보여 준다.
 
-## 기법 목록 (DAY1~3 수업 자료)
+## 기법 목록 (수업 자료)
 ${catalog}
 
 ## 할 일
@@ -151,7 +151,7 @@ ${COMMON_RULES}
 
 // 기법 카드는 공개 정보라 비밀번호 없이도 볼 수 있음
 app.get("/api/techniques", (req, res) => {
-  res.json({ techniques: TECHNIQUES });
+  res.json({ techniques: TECHNIQUES, topics: TOPICS });
 });
 
 app.post("/api/login", requirePassword, (req, res) => {
@@ -179,7 +179,7 @@ app.post("/api/recommend", requirePassword, async (req, res) => {
     .filter((rec) => TECHNIQUE_BY_ID[rec.technique_id])
     .map((rec) => {
       const t = TECHNIQUE_BY_ID[rec.technique_id];
-      return { ...rec, name: t.name, group: t.group, day: t.day };
+      return { ...rec, name: t.name, group: t.group };
     });
   res.json({ summary: result.summary || "", recommendations });
 });

@@ -1,11 +1,12 @@
 // ───────────────────────────────────────────────
 // AI 프롬프트 생성기 화면 동작
 //  1) 비밀번호 확인 → 2) 기법 추천 대시보드 → 3) APE 최종 생성
-//  + 기법 카드 탭 (DAY1~3 자료)
+//  + 기법 카드 탭 (주제별로 묶은 기법)
 // ───────────────────────────────────────────────
 
 const $ = (id) => document.getElementById(id);
 let techniques = [];      // 서버에서 받은 기법 목록
+let topics = [];          // 기법을 묶는 큰 주제
 let forcedIds = [];       // 기법 카드에서 직접 고른 기법
 let lastInput = null;     // 마지막으로 추천받은 입력값 (최종 생성 때 다시 사용)
 
@@ -152,7 +153,7 @@ function renderDashboard(data) {
     const card = el("article", { class: "card rec" },
       el("div", { class: "rec-head" },
         el("div", {},
-          el("span", { class: "badge", text: `${i + 1}순위 · DAY ${rec.day} · ${rec.group}` }),
+          el("span", { class: "badge", text: `${i + 1}순위 · ${rec.group}` }),
           el("h3", { text: rec.name }),
         ),
         el("div", { class: "score" }, el("b", { text: String(score) }), el("div", { class: "muted", text: "적합도" })),
@@ -249,34 +250,63 @@ function openLink(label, url, prompt) {
 
 // ───── 기법 카드 탭 ─────
 
-let dayFilter = "all";
+let topicFilter = "all";
 
+// 카드 한 장 만들기
+function techCard(t) {
+  return el("article", { class: "card tech" },
+    el("h3", { text: t.name }),
+    el("p", { text: t.summary }),
+    el("p", { class: "when", text: "💡 이럴 때: " + t.when }),
+    el("details", {},
+      el("summary", { text: "뼈대 보기" }),
+      el("pre", { class: "prompt", text: t.how }),
+    ),
+    el("details", {},
+      el("summary", { text: "수업 예시 프롬프트" }),
+      el("pre", { class: "prompt", text: t.example }),
+    ),
+    el("div", { class: "row" },
+      copyButton(() => t.example, "예시 복사"),
+      el("button", { class: "btn small primary", type: "button", text: "이 기법으로 생성 →", onclick: () => useTechnique(t.id) }),
+    ),
+  );
+}
+
+// 위쪽 주제 버튼 [전체 | 주제1 | 주제2 …]
+function renderTopicChips() {
+  const chips = [{ name: "all", label: "전체" }, ...topics.map((tp) => ({ name: tp.name, label: tp.name }))];
+  $("topicChips").replaceChildren(...chips.map((c) =>
+    el("button", {
+      class: "chip" + (c.name === topicFilter ? " active" : ""),
+      type: "button",
+      text: c.label,
+      onclick: () => { topicFilter = c.name; renderTopicChips(); renderLibrary(); },
+    })));
+}
+
+// 주제별로 제목 + 카드 묶음 그리기
 function renderLibrary() {
   const q = $("search").value.trim().toLowerCase();
-  const list = techniques.filter((t) =>
-    (dayFilter === "all" || String(t.day) === dayFilter) &&
-    (!q || [t.name, t.summary, t.when, t.group].join(" ").toLowerCase().includes(q)));
+  const sections = topics
+    .filter((tp) => topicFilter === "all" || tp.name === topicFilter)
+    .map((tp) => {
+      const list = techniques.filter((t) =>
+        t.group === tp.name &&
+        (!q || [t.name, t.summary, t.when, t.group].join(" ").toLowerCase().includes(q)));
+      if (!list.length) return null;
+      return el("section", { class: "topic" },
+        el("div", { class: "topic-head" },
+          el("h2", { text: `${tp.name} ` }, el("span", { class: "count", text: `${list.length}` })),
+          el("p", { class: "muted", text: tp.desc }),
+        ),
+        el("div", { class: "tech-grid" }, list.map(techCard)),
+      );
+    })
+    .filter(Boolean);
 
-  $("techGrid").replaceChildren(...list.map((t) =>
-    el("article", { class: "card tech" },
-      el("span", { class: "badge", text: `DAY ${t.day} · ${t.group}` }),
-      el("h3", { text: t.name }),
-      el("p", { text: t.summary }),
-      el("p", { class: "when", text: "💡 이럴 때: " + t.when }),
-      el("details", {},
-        el("summary", { text: "뼈대 보기" }),
-        el("pre", { class: "prompt", text: t.how }),
-      ),
-      el("details", {},
-        el("summary", { text: "수업 예시 프롬프트" }),
-        el("pre", { class: "prompt", text: t.example }),
-      ),
-      el("div", { class: "row" },
-        copyButton(() => t.example, "예시 복사"),
-        el("button", { class: "btn small primary", type: "button", text: "이 기법으로 생성 →", onclick: () => useTechnique(t.id) }),
-      ),
-    )));
-  if (!list.length) $("techGrid").append(el("p", { class: "muted", text: "검색 결과가 없어요." }));
+  $("techGrid").replaceChildren(...sections);
+  if (!sections.length) $("techGrid").append(el("p", { class: "muted", text: "검색 결과가 없어요." }));
 }
 
 function useTechnique(id) {
@@ -287,18 +317,15 @@ function useTechnique(id) {
 }
 
 $("search").addEventListener("input", renderLibrary);
-document.querySelectorAll("#dayChips .chip").forEach((chip) =>
-  chip.addEventListener("click", () => {
-    dayFilter = chip.dataset.day;
-    document.querySelectorAll("#dayChips .chip").forEach((c) => c.classList.toggle("active", c === chip));
-    renderLibrary();
-  }));
 
 // ───── 시작 ─────
 (async function start() {
   try {
     const res = await fetch("/api/techniques");
-    techniques = (await res.json()).techniques || [];
+    const data = await res.json();
+    techniques = data.techniques || [];
+    topics = data.topics || [];
+    renderTopicChips();
     renderLibrary();
   } catch {
     $("techGrid").replaceChildren(el("p", { class: "error", text: "기법 목록을 불러오지 못했어요." }));

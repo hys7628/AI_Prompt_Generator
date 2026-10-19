@@ -6,8 +6,7 @@
  *
  * 기법을 추가하고 싶으면 아래 형식대로 객체 하나만 더 넣으면 됩니다.
  *   id      : 영어 이름(겹치면 안 됨)
- *   day     : 몇 일차 자료인지
- *   group   : 묶음 이름 (기본기 / 패턴 / 프레임워크 / 고급)
+ *   group   : 큰 주제 이름 (아래 TOPICS 중 하나)
  *   name    : 화면에 보일 이름
  *   summary : 한 줄 설명
  *   when    : 이럴 때 쓰면 좋아요
@@ -15,11 +14,20 @@
  *   example : 수업 자료의 예시 프롬프트
  */
 
+// 기법 카드를 묶는 큰 주제 (화면에 이 순서대로 보여요)
+export const TOPICS = [
+  { name: "프롬프트 구조", desc: "프롬프트의 모양과 말의 세기를 정하는 기본기" },
+  { name: "역할·대상", desc: "누가 말하고, 누가 듣고, 어떤 관점으로 볼지 정하기" },
+  { name: "예시·반복 생성", desc: "예시로 형식을 맞추고, 같은 틀로 여러 개 만들기" },
+  { name: "대화·진행", desc: "AI와 주고받으며 단계적으로 결과물을 키워 가기" },
+  { name: "검증·품질", desc: "틀린 답을 줄이고 스스로 점검·개선하게 하기" },
+  { name: "프레임워크", desc: "좋은 프롬프트 규칙을 영어 첫 글자로 묶은 공식" },
+];
+
 export const TECHNIQUES = [
   {
     id: "narrative",
-    day: 1,
-    group: "기본기",
+    group: "프롬프트 구조",
     name: "서술형 프롬프트",
     summary: "역할·배경·목적을 이야기하듯 설명해 AI가 상황(맥락)을 이해하게 한다.",
     when: "처음 상황을 설명할 때, 자유롭고 유연한 답이 필요할 때",
@@ -28,8 +36,7 @@ export const TECHNIQUES = [
   },
   {
     id: "instruction",
-    day: 1,
-    group: "기본기",
+    group: "프롬프트 구조",
     name: "지침형 프롬프트",
     summary: "꼭 지켜야 할 것을 1, 2, 3 번호 규칙으로 나열한다.",
     when: "반드시 지켜야 할 조건이 여러 개 있을 때",
@@ -38,8 +45,7 @@ export const TECHNIQUES = [
   },
   {
     id: "function",
-    day: 1,
-    group: "기본기",
+    group: "프롬프트 구조",
     name: "함수형 프롬프트",
     summary: "입력 → 처리 → 출력 틀을 정해 두고 { } 안의 값만 바꿔 재사용한다.",
     when: "같은 작업을 값만 바꿔 반복할 때, 결과 모양(JSON 등)을 고정하고 싶을 때",
@@ -48,8 +54,7 @@ export const TECHNIQUES = [
   },
   {
     id: "few_shot",
-    day: 1,
-    group: "기본기",
+    group: "예시·반복 생성",
     name: "예시 주기 (제로·원·퓨샷)",
     summary: "예시를 1개(원샷) 또는 여러 개(퓨샷) 보여 줘서 답의 범위와 형식을 좁힌다.",
     when: "답의 형식·자릿수·톤을 일정하게 맞추고 싶을 때, 분류 작업",
@@ -58,8 +63,7 @@ export const TECHNIQUES = [
   },
   {
     id: "persona",
-    day: 1,
-    group: "기본기",
+    group: "역할·대상",
     name: "페르소나 (역할 주기)",
     summary: "역할·경력·전문 분야·말투 4요소로 AI에게 역할을 준다. 여러 명(멀티 페르소나)도 가능.",
     when: "전문가 수준의 관점·말투가 필요할 때, 여러 입장의 의견을 받고 싶을 때",
@@ -68,8 +72,7 @@ export const TECHNIQUES = [
   },
   {
     id: "markdown",
-    day: 1,
-    group: "기본기",
+    group: "프롬프트 구조",
     name: "마크다운 구조화",
     summary: "#역할 · #작업 · #입력 · #제약 · #출력 5칸을 기호로 구분해 정리한다.",
     when: "요청이 길고 조건이 많을 때, 팀에서 같은 틀을 공유할 때",
@@ -78,8 +81,7 @@ export const TECHNIQUES = [
   },
   {
     id: "strength_tone",
-    day: 1,
-    group: "기본기",
+    group: "프롬프트 구조",
     name: "강도 · 톤 조절",
     summary: "권장→일반→강조→절대 4단계 단어 세기, 숫자로 말하기, 하지 말 것, 말투를 정한다.",
     when: "AI가 중요한 조건을 무시할 때, 길이·말투를 정확히 맞추고 싶을 때",
@@ -88,8 +90,7 @@ export const TECHNIQUES = [
   },
   {
     id: "alternatives",
-    day: 1,
-    group: "패턴",
+    group: "대화·진행",
     name: "대안 접근법 패턴",
     summary: "AI가 하나를 골라 주게 하지 않고 여러 방법을 장단점과 함께 받아 내가 고른다.",
     when: "방법이 여러 개일 수 있을 때, 결정 전에 비교가 필요할 때",
@@ -98,8 +99,7 @@ export const TECHNIQUES = [
   },
   {
     id: "user_persona",
-    day: 1,
-    group: "패턴",
+    group: "역할·대상",
     name: "이용자 페르소나 패턴",
     summary: "답을 '듣는 사람'의 직책·지식 수준·관심사·우려를 정해 설명 수준을 맞춘다.",
     when: "읽는 사람이 정해져 있을 때 (상사, 고객, 초보자 등)",
@@ -108,8 +108,7 @@ export const TECHNIQUES = [
   },
   {
     id: "recipe",
-    day: 1,
-    group: "패턴",
+    group: "대화·진행",
     name: "레시피 패턴",
     summary: "목표와 현재 상태를 주고 순서 있는 단계별 행동 지침(완료 기준 포함)을 받는다.",
     when: "목표는 큰데 무엇부터 할지 모를 때, 절차·체크리스트가 필요할 때",
@@ -118,8 +117,7 @@ export const TECHNIQUES = [
   },
   {
     id: "flipped",
-    day: 1,
-    group: "패턴",
+    group: "대화·진행",
     name: "뒤집힌 상호작용 (역질문)",
     summary: "바로 만들지 말고 AI가 필요한 정보를 먼저 나에게 질문하게 한다.",
     when: "내가 뭘 빠뜨렸는지 모를 때, 맞춤형 결과물이 필요할 때",
@@ -128,8 +126,7 @@ export const TECHNIQUES = [
   },
   {
     id: "cognitive_verifier",
-    day: 1,
-    group: "패턴",
+    group: "검증·품질",
     name: "인지 검증자 패턴",
     summary: "복잡한 질문을 하위 질문 3~5개로 쪼개 하나씩 답한 뒤 통합한다.",
     when: "복잡하고 틀리기 쉬운 질문, 그럴듯하게 틀릴 위험이 클 때",
@@ -138,8 +135,7 @@ export const TECHNIQUES = [
   },
   {
     id: "game_play",
-    day: 2,
-    group: "패턴",
+    group: "대화·진행",
     name: "게임 플레이 패턴",
     summary: "목적·규칙·엔딩을 정해 주면 AI가 진행자가 되어 장면과 선택지를 하나씩 주고받는다.",
     when: "주고받으며 진행해야 할 때 (게임, 동화, 협상·면접 연습 등)",
@@ -148,8 +144,7 @@ export const TECHNIQUES = [
   },
   {
     id: "question_refinement",
-    day: 2,
-    group: "패턴",
+    group: "대화·진행",
     name: "질문 개선 패턴",
     summary: "답하기 전에 내 질문의 모호함·잘못된 전제·빠진 맥락을 고쳐 더 좋은 질문으로 바꾼다.",
     when: "내 질문 자체가 두루뭉술할 때, 모르는 분야를 물을 때",
@@ -158,8 +153,7 @@ export const TECHNIQUES = [
   },
   {
     id: "fact_check",
-    day: 2,
-    group: "패턴",
+    group: "검증·품질",
     name: "팩트 체크 목록 패턴",
     summary: "답변 끝에 확인이 필요한 항목을 🔴🟡🟢 신호등이나 신뢰도(%)로 스스로 정리하게 한다.",
     when: "숫자·날짜·법·제도·출처처럼 틀리면 위험한 정보를 다룰 때",
@@ -168,8 +162,7 @@ export const TECHNIQUES = [
   },
   {
     id: "meta_language",
-    day: 2,
-    group: "패턴",
+    group: "예시·반복 생성",
     name: "메타 언어 (나만의 단축어)",
     summary: "/요약 · /비교 처럼 긴 지시를 단축어로 정의해 두고 짧게 불러 쓴다.",
     when: "같은 긴 조건을 매번 반복해서 쓸 때, 팀 공용 명령어가 필요할 때",
@@ -178,8 +171,7 @@ export const TECHNIQUES = [
   },
   {
     id: "reflection",
-    day: 2,
-    group: "패턴",
+    group: "검증·품질",
     name: "리플렉션 패턴",
     summary: "초안 → 자기 비평 → 개선본 3단계, 또는 기준별 점수를 매겨 낮은 항목을 고치게 한다.",
     when: "첫 답이 대충일 때, 코드·제안서처럼 품질이 중요한 결과물",
@@ -188,8 +180,7 @@ export const TECHNIQUES = [
   },
   {
     id: "outline",
-    day: 2,
-    group: "패턴",
+    group: "대화·진행",
     name: "아웃라인 확장 패턴",
     summary: "대주제 뼈대를 먼저 받고, 고른 부분만 중주제 → 소주제로 펼쳐 나간다.",
     when: "보고서·강의·앱처럼 긴 결과물, 아무것도 모르는 일을 시작할 때",
@@ -198,8 +189,7 @@ export const TECHNIQUES = [
   },
   {
     id: "context",
-    day: 2,
-    group: "패턴",
+    group: "대화·진행",
     name: "컨텍스트 관리자",
     summary: "상황·나의 수준·목적·제약·원하지 않는 것을 먼저 고정해 내 상황 안에서만 답하게 한다.",
     when: "일반론만 나올 때, 회사·예산·인력 같은 조건이 분명할 때",
@@ -208,8 +198,7 @@ export const TECHNIQUES = [
   },
   {
     id: "infinite",
-    day: 2,
-    group: "패턴",
+    group: "예시·반복 생성",
     name: "무한 생성 패턴",
     summary: "고정 틀 + 바뀌는 변수 조합으로 비슷한 결과물을 여러 개 한꺼번에 찍어낸다.",
     when: "메일·문제·더미 데이터처럼 같은 틀로 여러 개가 필요할 때",
@@ -218,7 +207,6 @@ export const TECHNIQUES = [
   },
   {
     id: "5w1h",
-    day: 2,
     group: "프레임워크",
     name: "5W1H (육하원칙)",
     summary: "누가·무엇을·언제·어디서·왜·어떻게로 상황을 빠짐없이 정리한다.",
@@ -228,7 +216,6 @@ export const TECHNIQUES = [
   },
   {
     id: "co_star",
-    day: 2,
     group: "프레임워크",
     name: "CO-STAR",
     summary: "Context 상황 · Objective 목표 · Style 문체 · Tone 말투 · Audience 대상 · Response 결과물.",
@@ -238,7 +225,6 @@ export const TECHNIQUES = [
   },
   {
     id: "focus",
-    day: 2,
     group: "프레임워크",
     name: "FOCUS",
     summary: "Function 역할 · Objective 목표 · Context 상황 · Utility 활용처 · Specifications 세부 조건.",
@@ -248,7 +234,6 @@ export const TECHNIQUES = [
   },
   {
     id: "roses",
-    day: 2,
     group: "프레임워크",
     name: "ROSES",
     summary: "Role 역할 · Objective 목표 · Scenario 시나리오 · Expected Solution 기대 결과 · Steps 단계.",
@@ -258,7 +243,6 @@ export const TECHNIQUES = [
   },
   {
     id: "risen",
-    day: 2,
     group: "프레임워크",
     name: "RISEN",
     summary: "Role 역할 · Instructions 지시 · Steps 단계 · End goal 최종 목표 · Narrowing 범위 좁히기.",
@@ -268,7 +252,6 @@ export const TECHNIQUES = [
   },
   {
     id: "bab",
-    day: 2,
     group: "프레임워크",
     name: "BAB",
     summary: "Before 이전 · After 이후 · Bridge 연결 방법으로 변화 스토리를 만든다.",
@@ -278,8 +261,7 @@ export const TECHNIQUES = [
   },
   {
     id: "multi_perspective",
-    day: 3,
-    group: "고급",
+    group: "역할·대상",
     name: "다중 관점 기법",
     summary: "이해관계자·전문 분야·시간·가치관·문화 등 여러 관점에서 동시에 보고 교차점을 찾는다.",
     when: "계획·제품·문서를 여러 입장에서 검토할 때, 놓치는 시각이 없게 할 때",
@@ -288,8 +270,7 @@ export const TECHNIQUES = [
   },
   {
     id: "deliberate",
-    day: 3,
-    group: "고급",
+    group: "검증·품질",
     name: "심사숙고 유도 (CoT)",
     summary: "바로 답하지 말고 단계별로 생각하며 중간 결론을 보이게 하고, 반론을 먼저 요청한다.",
     when: "진출국·가격·설계 방향처럼 틀리면 비싼 판단을 할 때",
@@ -298,8 +279,7 @@ export const TECHNIQUES = [
   },
   {
     id: "ape",
-    day: 3,
-    group: "고급",
+    group: "검증·품질",
     name: "APE (자동 프롬프트 엔지니어)",
     summary: "서로 다른 전략으로 후보 프롬프트를 만들고 채점한 뒤 상위 후보의 장점을 합쳐 최적 프롬프트 1개를 만든다.",
     when: "\"뭐라고 시켜야 하지?\"가 막힐 때, 반복 업무용 최적 프롬프트를 만들 때",

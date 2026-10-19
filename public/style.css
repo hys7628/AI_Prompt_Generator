@@ -111,6 +111,11 @@ tr.picked td { background: var(--primary-soft); font-weight: 600; }
 .chips { display: flex; gap: 6px; flex-wrap: wrap; }
 .chip { font: inherit; border: 1px solid var(--line); background: var(--card); color: var(--text); border-radius: 999px; padding: 6px 14px; cursor: pointer; }
 .chip.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+.topic-list { display: grid; gap: 32px; }
+.topic-head { margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid var(--line); }
+.topic-head h2 { margin: 0; font-size: 1.25rem; display: flex; align-items: center; gap: 8px; }
+.topic-head p { margin: 2px 0 0; font-size: 0.9rem; }
+.count { font-size: 0.75rem; font-weight: 700; padding: 1px 8px; border-radius: 999px; background: var(--primary-soft); color: var(--primary); }
 .tech-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
 .tech { display: flex; flex-direction: column; gap: 8px; }
 .tech h3 { margin: 0; font-size: 1.05rem; }
