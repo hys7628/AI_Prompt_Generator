@@ -206,6 +206,15 @@ app.post("/api/generate", requirePassword, async (req, res) => {
 });
 
 // 내 컴퓨터에서 테스트할 때: npm start → http://localhost:5000
-app.listen(PORT, () => {
+app.listen(PORT, (error) => {
+  if (error) {
+    // 이미 다른 서버가 같은 포트를 쓰고 있을 때 등
+    console.error(
+      error.code === "EADDRINUSE"
+        ? `❌ ${PORT}번 포트를 이미 다른 서버가 쓰고 있어요. 켜져 있는 서버를 Ctrl + C로 끄고 다시 실행하세요.`
+        : `❌ 서버를 켜지 못했어요: ${error.message}`,
+    );
+    process.exit(1);
+  }
   console.log(`✨ 프롬프트 생성기 실행 중: http://localhost:${PORT}`);
 });
