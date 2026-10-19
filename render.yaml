@@ -11,7 +11,7 @@ services:
       - key: NODE_VERSION
         value: "22"
       - key: OPENAI_MODEL
-        value: gpt-6.1-sol-light
+        value: gpt-6.1-sol
       - key: OPENAI_API_KEY
         sync: false   # 대시보드에서 직접 입력 (코드에 남기지 않음)
       - key: APP_PASSWORD

@@ -9,7 +9,7 @@
  * 비밀 정보는 코드에 쓰지 않고 '환경변수'로 받습니다. (Render 대시보드 → Environment)
  *   OPENAI_API_KEY : OpenAI API 키
  *   APP_PASSWORD   : 사이트 접속 비밀번호 (남이 내 키로 쓰지 못하게)
- *   OPENAI_MODEL   : 사용할 모델 이름 (기본값 gpt-6.1-sol-light)
+ *   OPENAI_MODEL   : 사용할 모델 이름 (기본값 gpt-6.1-sol)
  */
 
 import crypto from "node:crypto";
@@ -17,7 +17,7 @@ import express from "express";
 import OpenAI from "openai";
 import { TECHNIQUES, TECHNIQUE_BY_ID } from "./techniques.js";
 
-const OPENAI_MODEL = process.env.OPENAI_MODEL || "gpt-6.1-sol-light";
+const OPENAI_MODEL = process.env.OPENAI_MODEL || "gpt-6.1-sol";
 const APP_PASSWORD = process.env.APP_PASSWORD || "";
 const PORT = process.env.PORT || 5000;
 const MAX_INPUT_LEN = 1500; // 입력칸 하나당 최대 글자 수 (요금 폭탄 방지)
