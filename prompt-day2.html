@@ -1,0 +1,1856 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>프롬프트 엔지니어링 DAY 2</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+:root{
+  --paper:#F3F5F8; --card:#FFFFFF; --ink:#18202E; --muted:#5B6474;
+  --cobalt:#2B4ACB; --cobalt-soft:#E4E9FB; --rule:#D9DEE8;
+  --hl:#FFD84D; --hl-soft:#FFF3BF; --red:#C8342B;
+  --font:"Pretendard","Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:#2A3242;font-family:var(--font);color:var(--ink);-webkit-font-smoothing:antialiased}
+body{overflow:hidden;word-break:keep-all;overflow-wrap:break-word}
+#viewport{position:fixed;inset:0 0 48px 0;display:flex;align-items:center;justify-content:center}
+#stage{width:1280px;height:720px;position:relative;transform-origin:center center;flex:none}
+.slide{position:absolute;inset:0;background:var(--paper);padding:56px 72px 64px;display:none;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.slide.active{display:flex;flex-direction:column}
+.slide h2{font-size:40px;font-weight:800;letter-spacing:-.02em;line-height:1.2;margin-bottom:22px}
+.slide h3{font-size:22px;font-weight:700;letter-spacing:-.01em;margin-bottom:10px}
+.slide p,.slide li{font-size:20px;line-height:1.6}
+.lead{font-size:23px!important;color:#2B3444;max-width:62ch;margin-bottom:18px}
+.muted{color:var(--muted)}
+.small{font-size:16px!important}
+ul.list{list-style:none}
+ul.list li{padding-left:22px;position:relative;margin-bottom:8px}
+ul.list li::before{content:"";position:absolute;left:0;top:.72em;width:8px;height:8px;background:var(--cobalt)}
+b,strong{font-weight:700}
+.body{flex:1;min-height:0}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:start}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;align-items:start;align-content:start}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;align-items:start;align-content:start}
+.panel{background:var(--card);border-left:5px solid var(--cobalt);padding:20px 24px}
+.panel.flat{border-left:0;border-top:4px solid var(--ink)}
+.panel p,.panel li{font-size:18px}
+.panel .tool{margin-top:10px;font-size:15px;color:var(--cobalt);font-weight:600}
+.prompt{background:var(--ink);color:#EEF1F7;padding:22px 26px;font-size:18px;line-height:1.7;border-radius:2px}
+.prompt .lab{display:block;color:var(--hl);font-weight:700;font-size:15px;margin-bottom:8px}
+.note{margin-top:14px;font-size:16px!important;color:var(--muted)}
+table.t{width:100%;border-collapse:collapse;background:var(--card);font-size:17px}
+table.t th{background:var(--ink);color:#fff;text-align:left;padding:11px 14px;font-weight:600}
+table.t td{padding:10px 14px;border-bottom:1px solid var(--rule);vertical-align:top;line-height:1.45}
+table.t td:first-child{font-weight:700}
+.foot{position:absolute;left:72px;right:72px;bottom:22px;display:flex;justify-content:space-between;font-size:14px;color:var(--muted);border-top:1px solid var(--rule);padding-top:10px}
+/* covers */
+.slide.cover{background:var(--cobalt);color:#fff;justify-content:flex-end;padding-bottom:110px}
+.slide.cover .kicker{font-size:20px;opacity:.8;margin-bottom:14px}
+.slide.cover h1{font-size:76px;font-weight:800;letter-spacing:-.035em;line-height:1.12;max-width:17ch}
+.slide.cover .sub{font-size:24px;opacity:.9;margin-top:22px;max-width:40ch;line-height:1.5}
+.slide.cover .big-no{position:absolute;right:56px;top:20px;font-size:280px;font-weight:800;line-height:1;color:rgba(255,255,255,.12);letter-spacing:-.05em}
+.slide.cover .foot{color:rgba(255,255,255,.7);border-color:rgba(255,255,255,.25)}
+.slide.end{background:var(--ink);color:#fff;justify-content:center}
+.slide.end h1{font-size:64px;font-weight:800;letter-spacing:-.03em}
+.slide.end .foot{color:rgba(255,255,255,.6);border-color:rgba(255,255,255,.2)}
+/* timeline */
+.tl{display:grid;gap:0;border-top:3px solid var(--ink);margin-top:30px}
+.tl>div{padding:20px 18px 0 0;position:relative}
+.tl>div::before{content:"";position:absolute;top:-10px;left:0;width:16px;height:16px;background:var(--cobalt);border:3px solid var(--paper)}
+.tl .y{font-size:36px;font-weight:800;color:var(--cobalt);letter-spacing:-.02em}
+.tl p{font-size:18px;margin-top:6px}
+/* steps */
+.steps{display:grid;gap:14px}
+.steps>div{display:grid;grid-template-columns:120px 1fr;gap:18px;background:var(--card);padding:16px 20px;align-items:center}
+.steps .n{font-weight:800;color:var(--cobalt);font-size:18px}
+.steps p{font-size:18px}
+/* bars */
+.bar{display:grid;grid-template-columns:110px 1fr 64px;gap:14px;align-items:center;margin:10px 0;font-size:19px}
+.bar .track{height:26px;background:var(--rule)}
+.bar .fill{height:100%;background:var(--cobalt);transition:width .25s}
+.bar .pct{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
+.tokens{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}
+.tokens span{background:var(--card);border:2px solid var(--cobalt);padding:6px 12px;font-size:20px;font-weight:600}
+.tokens span:nth-child(3n+2){border-color:#1F8A70}
+.tokens span:nth-child(3n){border-color:#B5651D}
+input[type=range]{width:100%;accent-color:var(--cobalt)}
+input.txt{width:100%;font:inherit;font-size:20px;padding:12px 14px;border:2px solid var(--ink);background:#fff}
+.bigq{font-size:30px;font-weight:700;margin:12px 0 18px}
+.pill{display:inline-block;background:var(--cobalt-soft);color:var(--cobalt);font-weight:600;font-size:15px;padding:4px 10px;margin:4px 6px 0 0}
+.warn{border-left-color:var(--red)}
+/* bottom bar */
+#bar{position:fixed;left:0;right:0;bottom:0;height:48px;background:#1B2130;color:#C9D0DD;display:flex;align-items:center;gap:10px;padding:0 14px;font-size:14px;z-index:5}
+#bar button{background:#2E3648;color:#fff;border:0;font:inherit;font-size:14px;padding:7px 12px;cursor:pointer}
+#bar button:hover{background:#3B4560}
+#bar button:focus-visible,#toc button:focus-visible{outline:3px solid var(--hl);outline-offset:2px}
+#bar .sp{flex:1}
+#bar .ct{font-variant-numeric:tabular-nums;min-width:90px;text-align:center}
+#prog{position:fixed;left:0;bottom:48px;height:3px;background:var(--hl);z-index:5;transition:width .2s}
+#toc{position:fixed;inset:0 0 48px 0;background:rgba(20,26,38,.96);z-index:6;display:none;overflow:auto;padding:40px}
+#toc.open{display:block}
+#toc h2{color:#fff;font-size:26px;margin-bottom:20px}
+#toc .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+#toc button{background:#2A3346;color:#fff;border:0;text-align:left;padding:16px 18px;font:inherit;font-size:17px;cursor:pointer}
+#toc button small{display:block;color:#9AA6BC;font-size:13px;margin-top:4px}
+#toc button:hover{background:var(--cobalt)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+
+.code{background:#1E2533;color:#E6EAF2;font-family:"D2Coding","Consolas","Menlo",monospace;font-size:16px;line-height:1.6;padding:18px 22px;white-space:pre;overflow:hidden}
+.code .cm{color:#8FA0BA}
+.code b{color:var(--hl);font-weight:700}
+kbd{display:inline-block;font-family:inherit;font-size:.85em;font-weight:700;background:#fff;border:1.5px solid #9AA3B5;border-bottom-width:3px;padding:0 7px;line-height:1.5;border-radius:3px;color:var(--ink)}
+.devices{display:flex;align-items:flex-end;gap:22px;margin-top:20px}
+.dv{border:4px solid var(--ink);background:var(--card);position:relative;display:flex;align-items:flex-end;justify-content:center;padding-bottom:6px;font-size:15px;font-weight:700}
+.dv::before{content:"";position:absolute;left:10%;right:10%;top:12%;height:16%;background:var(--cobalt-soft)}
+.dv::after{content:"";position:absolute;left:10%;right:10%;top:34%;height:30%;background:var(--rule)}
+.dv.pc{width:230px;height:150px}.dv.tab{width:120px;height:160px}.dv.mob{width:72px;height:130px}
+.dv span{position:relative;z-index:1}
+.browser{border:3px solid var(--ink);background:var(--card)}
+.b-head{background:#E3E7EF;padding:12px 14px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;border-bottom:3px solid var(--ink);position:relative}
+.b-head .fav{background:var(--cobalt);color:#fff;width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;font-size:14px}
+.b-head .tab-t{background:#fff;padding:3px 12px;font-size:15px;font-weight:600}
+.b-head .url{flex-basis:100%;background:#fff;padding:4px 10px;font-size:14px;color:var(--muted)}
+.browser .tag{display:inline-block;background:var(--hl);font-size:13px;font-weight:700;padding:2px 8px}
+.b-body{height:230px;padding:14px;background:repeating-linear-gradient(0deg,transparent 0 34px,#EEF1F6 34px 36px)}
+.layout-demo{display:grid;gap:8px;grid-template-rows:70px 230px 70px}
+.ld{display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;border:3px solid var(--ink)}
+.ld.h{background:var(--cobalt);color:#fff}.ld.c{background:var(--card)}.ld.f{background:#3A4458;color:#fff}
+.swatches{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px}
+.swatches div{height:90px;display:flex;align-items:flex-end;padding:6px;font-size:13px;font-weight:700;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.5)}
+input[type=color]{width:100%;height:46px;border:2px solid var(--ink);padding:2px;background:#fff;margin-top:6px}
+.wide-demo{border:3px solid var(--ink);background:var(--card);padding:10px 0}
+.wd-full{background:#3A4458;color:#fff;text-align:center;padding:16px 8px;font-weight:600;font-size:16px}
+.wd-inner{margin-top:10px;background:var(--rule)}
+.wd-inner div{width:62%;margin:0 auto;background:var(--cobalt);color:#fff;text-align:center;padding:16px 8px;font-weight:600;font-size:16px}
+.flip{position:relative;height:300px}
+.flip .pg{position:absolute;width:220px;height:260px;background:var(--card);border:3px solid var(--ink);left:60px;top:20px}
+.flip .pg:nth-child(1){transform:translate(0,0)}.flip .pg:nth-child(2){transform:translate(14px,-6px) rotate(-3deg)}.flip .pg:nth-child(3){transform:translate(28px,-12px) rotate(-6deg)}.flip .pg:nth-child(4){transform:translate(42px,-18px) rotate(-9deg)}
+.flip .pg:nth-child(5){transform:translate(56px,-24px) rotate(-12deg)}
+.flip .pg::after{content:"";position:absolute;width:44px;height:44px;border-radius:50%;background:var(--cobalt);top:100px}
+.flip .pg:nth-child(1)::after{left:20px}.flip .pg:nth-child(2)::after{left:55px}.flip .pg:nth-child(3)::after{left:90px}.flip .pg:nth-child(4)::after{left:125px}.flip .pg:nth-child(5)::after{left:155px}
+.fpsbtns{display:flex;gap:10px;margin-top:6px}
+.fpsbtns button{font:inherit;font-size:20px;font-weight:700;padding:8px 22px;border:2px solid var(--ink);background:#fff;cursor:pointer}
+.fpsbtns button.on{background:var(--ink);color:#fff}
+.tc-box{background:var(--ink);color:#fff;padding:28px;text-align:center}
+.tc-box .tc{font-size:96px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.02em;line-height:1}
+.tc-box .muted{color:#9AA6BC}
+.tc-box #tcMsg{margin-top:10px;color:var(--hl);min-height:1.5em}
+.ui-map{display:grid;grid-template-columns:1fr 1.4fr 1fr;grid-template-rows:170px 120px;gap:6px;background:#11151D;padding:6px}
+.ui-map>div{background:#2A3141;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:700;font-size:17px;text-align:center}
+.ui-map span{font-weight:400;font-size:13px;color:#AEB8CA}
+.ui-map .u-time{grid-column:1/4;background:var(--cobalt)}
+.tracks{position:relative;background:#1E2533;padding:16px 14px;display:grid;gap:10px}
+.tr{position:relative;height:58px;background:#2A3141;padding-left:70px}
+.tr>span{position:absolute;left:8px;top:18px;color:#AEB8CA;font-size:14px}
+.clip{position:absolute;top:8px;bottom:8px;margin-left:70px;max-width:calc(100% - 70px);background:var(--cobalt);color:#fff;font-size:14px;font-weight:600;display:flex;align-items:center;padding-left:10px}
+.t2 .clip{background:#1F8A70}.t3 .clip{background:#B5651D}
+.ind{position:absolute;top:6px;bottom:6px;width:3px;background:var(--hl)}
+.wave{height:70px;margin-top:14px;background:linear-gradient(90deg,transparent 49%,var(--cobalt) 49% 51%,transparent 51%),repeating-linear-gradient(90deg,var(--cobalt-soft) 0 4px,transparent 4px 7px);background-size:100% 100%,100% 30%;background-repeat:no-repeat;background-position:center,center}
+.mask-demo{position:relative;height:300px;border:3px solid var(--ink);overflow:hidden;background:#11151D}
+.md-bg{position:absolute;inset:0;background:repeating-linear-gradient(45deg,#2A3141 0 18px,#232A38 18px 36px)}
+.md-circle{position:absolute;width:180px;height:180px;border-radius:50%;left:calc(50% - 90px);top:40px;background:linear-gradient(135deg,#4F86D9,#2B4ACB);box-shadow:0 0 0 2px var(--hl)}
+.mask-demo span{position:absolute;bottom:12px;left:0;right:0;text-align:center;color:#fff;font-size:15px;font-weight:600}
+.kf-line{position:relative;height:90px;margin-top:20px;border-bottom:3px solid var(--ink)}
+.kf-line .k{position:absolute;bottom:-14px;font-size:26px;color:var(--cobalt)}
+.kf-line .lb{position:absolute;top:10px;font-size:14px;font-weight:600;background:var(--card);padding:2px 6px}
+.flow{display:grid;grid-template-columns:repeat(5,1fr);gap:0;margin-top:30px}
+.flow>div{background:var(--card);border-top:5px solid var(--cobalt);padding:20px 16px;position:relative;margin-right:22px}
+.flow>div:not(:last-child)::after{content:"";position:absolute;right:-20px;top:40%;border:9px solid transparent;border-left:12px solid var(--ink)}
+.flow b{display:block;font-size:20px;margin-bottom:8px}
+.flow span{font-size:16px;color:var(--muted);line-height:1.5}
+.steps>div{grid-template-columns:112px 1fr}
+.g2{align-content:start}
+.flow{grid-template-columns:repeat(5,1fr)}
+code{font-family:"D2Coding","Consolas","Menlo",monospace;background:var(--cobalt-soft);padding:1px 6px;font-size:.9em}
+.prompt{position:relative}
+.copyall{margin-top:12px;background:var(--hl);border:0;font:inherit;font-weight:800;font-size:15px;padding:8px 14px;cursor:pointer}
+.copyall.done{background:#7BD389}
+.game-mock{background:#121826;color:#E6EAF2;border:3px solid var(--ink);padding:18px;display:grid;gap:14px;font-size:17px}
+.gm-status{background:#232C3F;padding:8px 12px;font-weight:700;color:var(--hl)}
+.gm-scene{line-height:1.6}
+.gm-choices{display:grid;gap:6px}
+.gm-choices span{border:1px solid #4A5570;padding:6px 10px}
+.trust,.score-demo{background:var(--card);border:3px solid var(--ink);padding:18px;display:grid;gap:12px}
+.trust div,.score-demo div{display:grid;grid-template-columns:200px 1fr 90px;gap:10px;align-items:center;font-size:16px}
+.score-demo div{grid-template-columns:90px 1fr 110px}
+.trust i,.score-demo i{height:20px;background:#1F8A70;display:block}
+.trust i.low,.score-demo i.low{background:var(--red)}
+.trust b,.score-demo b{font-variant-numeric:tabular-nums}
+.tree{display:grid;gap:12px}
+.tree div{padding:14px 18px;font-size:18px}
+.t1{background:var(--ink);color:#fff;font-weight:800}
+.t2{background:var(--cobalt-soft);margin-left:30px}
+.t3{background:#FFF3BF;margin-left:60px}
+.t4{background:#DDF3EA;margin-left:90px}
+.meta-demo{background:var(--card);border:3px solid var(--ink);padding:20px;display:grid;gap:12px}
+.meta-arrow{font-weight:700;color:var(--muted);font-size:15px}
+.meta-out{background:#1E2533;color:#E6EAF2;padding:14px 16px;font-size:16px;line-height:1.6;min-height:110px}
+.meta-out b{color:var(--hl)}
+.meta-keys span{display:inline-block;background:var(--cobalt-soft);color:var(--cobalt);font-weight:700;padding:3px 10px;margin-right:6px;font-size:15px}
+.prompt.pre{white-space:pre-wrap;line-height:1.55;font-size:17px}
+.prompt.small-p{font-size:14.5px;line-height:1.45;padding:16px 20px}
+.prompt .lab{white-space:normal}
+.cpy{position:absolute;top:10px;right:10px;background:var(--hl);color:var(--ink);border:0;font:inherit;font-size:13px;font-weight:800;padding:4px 10px;cursor:pointer}
+.cpy:hover{filter:brightness(.95)}
+.cpy.done{background:#7BD389}
+.tool{margin-top:10px;font-size:15px;color:var(--cobalt);font-weight:700}
+.formula{display:grid;gap:10px}
+.formula div{background:var(--card);border-left:5px solid var(--cobalt);padding:14px 18px;font-size:21px}
+.formula span{background:var(--hl);padding:0 6px;font-weight:700}
+.lv-ctrl{margin-top:20px}
+.lv-stage{background:var(--card);border:3px solid var(--ink);padding:24px;display:grid;gap:18px}
+.lv-prompt{font-size:24px;font-weight:700;min-height:70px}
+.lv-meter{height:22px;background:var(--rule)}
+.lv-meter div{height:100%;background:linear-gradient(90deg,#7BD389,var(--hl),#E8833A,var(--red));transition:width .25s}
+.lv-result{font-size:18px;color:#2B3444;min-height:56px}
+.gantt{background:var(--card);border:3px solid var(--ink);padding:16px;display:grid;gap:8px;margin-top:20px}
+.gt-head,.gt-row{display:grid;grid-template-columns:110px repeat(5,1fr);gap:4px;align-items:center;font-size:15px}
+.gt-head span{font-weight:700;text-align:center;color:var(--muted)}
+.gt-row span{font-weight:700}
+.gt-row i{height:26px;background:var(--cobalt);display:block}
+.gt-row i.b{background:#1F8A70}.gt-row i.c{background:#B5651D}.gt-row i.d{background:#8B5CF6}
+.flowv{display:grid;gap:16px;padding-top:20px;text-align:center}
+.fv-q{background:var(--ink);color:#fff;font-weight:800;padding:18px;font-size:22px}
+.fv-subs{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.fv-subs span{background:var(--cobalt-soft);border:2px solid var(--cobalt);padding:16px 8px;font-weight:700}
+.fv-a{background:var(--hl);font-weight:800;padding:18px;font-size:22px}
+body.bare #bar,body.bare #prog{display:none}
+body.bare #viewport{bottom:0}
+
+.prompt .lab .where{display:block;font-style:normal;font-weight:700;font-size:12.5px;color:#9FE3B8;margin-top:3px;letter-spacing:0}
+.prompt.small-p .lab .where{font-size:12px}
+table.t.small td,table.t.small th{font-size:15.5px;padding:7px 12px;line-height:1.4}
+.flow span b{display:inline;font-size:inherit;margin:0}
+
+.steps.tight{gap:8px}.steps.tight>div{padding:10px 16px;grid-template-columns:auto 1fr;gap:14px}
+.steps.tight p{font-size:16px}
+.fwq{display:grid;gap:8px}
+.fwq button{font:inherit;font-size:16px;font-weight:700;text-align:left;padding:10px 14px;border:2px solid var(--ink);background:#fff;cursor:pointer}
+.fwq button.on{background:var(--ink);color:#fff}
+.fw-ans{background:var(--card);border-left:6px solid var(--cobalt);padding:18px 22px;min-height:120px}
+.fw-k{font-size:38px;font-weight:800;color:var(--cobalt)}
+.fw-w{font-size:17px;line-height:1.55;margin-top:4px}
+</style>
+</head>
+<body>
+<div id="viewport"><div id="stage">
+<section class="slide cover" data-sec="1">
+  <div class="big-no">P2</div>
+  <div class="kicker">프롬프트 엔지니어링 · DAY 2</div>
+  <h1>패턴과 프레임워크</h1>
+  <p class="sub">게임 · 질문 개선 · 팩트 체크 · 나만의 단축어 · 자기 검토 · 그리고 영어 이름 공식들</p>
+  <div class="foot"><span>Prompt Engineering DAY 2</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="1">
+  <h2>어제 배운 것 다시 보기</h2>
+  <div class="body">
+  <table class="t">
+    <tr><th style="width:24%">기법</th><th>한 줄 정리</th></tr>
+    <tr><td>세 가지 유형</td><td>서술형(맥락) · 지침형(규칙) · 함수형(구조)</td></tr>
+    <tr><td>제로·원·퓨샷</td><td>예시를 주면 답의 범위와 형식이 좁혀진다</td></tr>
+    <tr><td>페르소나 · 마크다운</td><td>역할 주기, #역할 · #작업 · #입력 · #제약 · #출력</td></tr>
+    <tr><td>강도 · 톤</td><td>권장 → 절대, 숫자로 말하기, 말투 바꾸기</td></tr>
+    <tr><td>패턴 ①~⑪</td><td>대안 · 이용자 페르소나 · 레시피 · 뒤집힌 상호작용 · 인지 검증자</td></tr>
+  </table>
+  <p class="note">오늘은 그다음 패턴들과, 이것들을 공식처럼 묶어 놓은 '프레임워크'를 배웁니다.</p>
+  </div>
+  <div class="foot"><span>Review</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="1">
+  <h2>같은 AI, 다른 결과: 질문 하나 차이</h2>
+  <div class="body g2">
+    <div class="panel warn">
+      <h3>"구구단 만들어 줘"</h3>
+      <ul class="list">
+        <li>파이썬? 웹페이지? 엑셀? → AI가 마음대로 고름</li>
+        <li>"웹으로 해 줘" → "버튼 넣어 줘" → "글씨 키워 줘" → "모바일도"…</li>
+        <li><b>5~6번</b> 다시 시킴 = 토큰 5~6배</li>
+      </ul>
+    </div>
+    <div class="panel">
+      <h3>처음부터 이렇게</h3>
+      <p>"초등학생이 쓰는 <b>구구단 연습 웹페이지</b>. 단을 고르는 <b>버튼 2~9</b>, 문제 10개, 정답이면 초록색. <b>모바일</b>에서도 크게. HTML 한 파일로."</p>
+      <p class="note">→ <b>1~2번</b>이면 끝. 프롬프트를 잘 쓰는 건 결국 <b>시간과 돈을 아끼는 기술</b>이에요.</p>
+    </div>
+  </div>
+  <p class="bigq" style="font-size:21px;margin-top:18px">AI는 내가 말한 만큼만 압니다. <b>빠진 정보는 AI가 마음대로 채워요.</b></p>
+  <div class="foot"><span>Same AI, Different Result</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="1">
+  <h2>프롬프트, 왜 이렇게까지 배울까?</h2>
+  <div class="body g2">
+    <div>
+      <ul class="list">
+        <li><b>정확한 자료</b>를 한 번에 뽑아내기 위해</li>
+        <li>바이브 코딩(말로 하는 코딩)은 쓸 때마다 <b>토큰 = 돈</b>이 나감</li>
+        <li>"구구단 만들어줘"처럼 대충 시키면 여러 번 고쳐야 함 → 토큰 낭비</li>
+        <li>유료 버전도 사용량 한도가 있음</li>
+      </ul>
+    </div>
+    <div class="panel">
+      <h3>목표</h3>
+      <p class="bigq" style="font-size:24px;margin:6px 0 10px">10번 물을 걸 5번으로</p>
+      <p>프롬프트는 한 번에 완벽한 답이 나오지 않습니다. 대신 <b>질문 횟수를 줄일 수</b> 있어요. 오늘 정리한 내용은 나중에 바이브 코딩할 때 그대로 붙여 쓰면 됩니다.</p>
+    </div>
+  </div>
+  <div class="foot"><span>Why Prompt</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="1">
+  <h2>왜 패턴을 하나씩 나눠서 배울까요?</h2>
+  <div class="body g2">
+    <div>
+      <p class="lead">어제는 <b>기본 도구</b>(역할·예시·형식·강도)를 배웠다면, 오늘은 <b>상황별 해결법</b>을 배워요.</p>
+      <p class="note">요리로 치면 어제는 칼질·불 조절, 오늘은 "볶음밥 레시피", "찌개 레시피"예요. 상황에 맞는 레시피를 꺼내 쓰면 실패가 줄어요.</p>
+    </div>
+    <table class="t small">
+      <tr><th style="width:52%">이럴 때</th><th>오늘 배우는 패턴</th></tr>
+      <tr><td>주고받으며 진행해야 한다</td><td>⑫ 게임 플레이</td></tr>
+      <tr><td>내 질문 자체가 애매하다</td><td>⑬ 질문 개선</td></tr>
+      <tr><td>그럴듯하게 틀린다</td><td>⑭ 팩트 체크</td></tr>
+      <tr><td>긴 명령을 매번 반복한다</td><td>⑮ 메타 언어</td></tr>
+      <tr><td>첫 답이 대충이다</td><td>⑯ 리플렉션</td></tr>
+      <tr><td>긴 결과물이 엉성하다</td><td>⑰ 아웃라인 확장</td></tr>
+      <tr><td>일반론만 늘어놓는다</td><td>⑱ 컨텍스트</td></tr>
+      <tr><td>비슷한 걸 여러 개 만들어야 한다</td><td>⑲ 무한 생성</td></tr>
+      <tr><td>매번 구성이 막막하다</td><td>프레임워크</td></tr>
+    </table>
+  </div>
+  <div class="foot"><span>Why Patterns</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="1">
+  <h2>바이브 코딩에서 오늘 패턴은 어디에 쓰일까?</h2>
+  <div class="body">
+    <p class="lead"><b>바이브 코딩</b> = 코드를 직접 치지 않고 AI에게 <b>말로 설명해서</b> 프로그램을 만드는 것. 대화가 길어질수록 오늘 패턴이 빛나요.</p>
+    <div class="flow">
+      <div><b>① 기획</b><span>요청을 다듬고 화면 목록 잡기 <br>(질문 개선 · 아웃라인)</span></div>
+      <div><b>② 상황 고정</b><span>"나는 초보, HTML 한 파일만" <br>(컨텍스트)</span></div>
+      <div><b>③ 코드 요청</b><span>빠짐없이 한 번에 <br>(프레임워크 RISEN)</span></div>
+      <div><b>④ 검토</b><span>AI가 스스로 점검 · 확인 목록 <br>(리플렉션 · 팩트 체크)</span></div>
+      <div><b>⑤ 반복 수정</b><span>"/수정 버튼 키워 줘" <br>(메타 언어 · 무한 생성)</span></div>
+    </div>
+    <p class="note" style="margin-top:22px">파트마다 끝에 <b>"실제로는 이렇게 써요"</b> 장이 있어요. 무역 업무 예시와 Claude에서 바로 해 보는 바이브 코딩 예시를 같이 봅니다.</p>
+  </div>
+  <div class="foot"><span>Patterns in Vibe Coding</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="1">
+  <h2>오늘 배울 것</h2>
+  <div class="body g4">
+    <div class="panel"><h3>⑫ 게임 플레이</h3><p>AI와 주고받는 게임·동화</p></div>
+    <div class="panel"><h3>⑬ 질문 개선</h3><p>내 질문을 먼저 고쳐 받기</p></div>
+    <div class="panel"><h3>⑭ 팩트 체크</h3><p>확인할 것 목록 받기</p></div>
+    <div class="panel"><h3>⑮ 메타 언어</h3><p>나만의 단축 명령어</p></div>
+    <div class="panel"><h3>⑯ 리플렉션</h3><p>AI가 스스로 검토·개선</p></div>
+    <div class="panel"><h3>⑰ 아웃라인 확장</h3><p>큰 뼈대 → 세부로</p></div>
+    <div class="panel"><h3>⑱ 컨텍스트 · ⑲ 무한 생성</h3><p>내 상황 고정, 여러 개 찍어내기</p></div>
+    <div class="panel flat"><h3>프레임워크 6종</h3><p>5W1H · CO-STAR · FOCUS · ROSES · RISEN · BAB</p></div>
+  </div>
+  <div class="foot"><span>Roadmap</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="1">
+  <h2>실습은 어디에서 할까요?</h2>
+  <div class="body">
+  <table class="t">
+    <tr><th style="width:16%">도구</th><th style="width:24%">들어가는 곳</th><th>언제 쓰나</th><th style="width:28%">입력하는 곳</th></tr>
+    <tr><td><b>Gemini</b></td><td><span class="url">gemini.google.com</span></td><td><b>오늘 기본 실습</b> (패턴·프레임워크)</td><td>화면 아래 입력창</td></tr>
+    <tr><td><b>Claude</b></td><td><span class="url">claude.ai</span></td><td>결과 비교, <b>"실제로는 이렇게 써요"</b>의 바이브 코딩 실습</td><td>화면 가운데(아래) 입력창</td></tr>
+    <tr><td><b>VS Code</b></td><td>컴퓨터에 설치한 프로그램</td><td>과제: 정리 사이트(index.html) 업데이트 · GitHub 올리기</td><td>왼쪽 탐색기의 파일</td></tr>
+  </table>
+  <p class="note">프롬프트 상자 위 <b>📍 표시</b>를 보세요. 오늘은 <b>"같은 채팅에 이어서"</b> 하는 실습이 많아요 (게임, 메타 언어, 아웃라인, 컨텍스트).</p>
+  </div>
+  <div class="foot"><span>Where to Practice</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="1">
+  <h2>실습 순서 (모든 실습 공통)</h2>
+  <div class="body g2">
+    <div class="steps">
+      <div><span class="n">1. 열기</span><p>새 탭에서 <span class="url">gemini.google.com</span> → 구글 계정 로그인</p></div>
+      <div><span class="n">2. 새 채팅</span><p>왼쪽 위 <b>새 채팅</b>(✎) 클릭</p></div>
+      <div><span class="n">3. 복사</span><p>프롬프트 상자 오른쪽 위 <b>복사</b> 버튼</p></div>
+      <div><span class="n">4. 붙여넣기</span><p>입력창 클릭 → <kbd>Ctrl</kbd>+<kbd>V</kbd> → <kbd>Enter</kbd></p></div>
+      <div><span class="n">5. 이어가기</span><p>📍에 "같은 채팅"이면 <b>새 채팅 열지 말고</b> 그 아래에 다음 프롬프트</p></div>
+    </div>
+    <div>
+      <div class="panel">
+        <h3>새 채팅? 같은 채팅?</h3>
+        <p><b>새 채팅:</b> 새 패턴·새 실습 시작</p>
+        <p style="margin-top:6px"><b>같은 채팅:</b> 1단계 → 2단계, AI가 질문했을 때, 게임 진행, 단축어 사용</p>
+        <p class="note">새 채팅을 열면 AI는 앞에서 정한 규칙(단축어·상황)을 <b>기억하지 못해요.</b></p>
+      </div>
+      <div class="panel flat" style="margin-top:12px">
+        <h3>Claude에서 할 때</h3>
+        <p><span class="url">claude.ai</span> → 왼쪽 위 <b>새 채팅</b> → 붙여넣기 → 코드는 오른쪽 <b>미리보기</b>에서 확인</p>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span>Practice Steps</span><span class="c"></span></div>
+</section>
+
+<section class="slide cover" data-sec="2">
+  <div class="big-no">12</div>
+  <div class="kicker">Game Play Pattern</div>
+  <h1>게임 플레이 패턴</h1>
+  <p class="sub">"지금부터 게임을 시작하지" — AI가 진행자가 되어 나와 주고받는다</p>
+  <div class="foot"><span>Game Play</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="2">
+  <h2>게임 플레이 패턴이란?</h2>
+  <div class="body g2">
+    <div>
+      <p class="lead">게임의 목적, 규칙, 엔딩을 정해 주면 AI가 <b>장면을 하나씩 보여 주고 선택지를 물어보며</b> 게임을 진행합니다.</p>
+      <ul class="list">
+        <li><b>#입력:</b> 게임 목적, 플레이어 할 일, 특징, 장애물, 진행 조건, 엔딩</li>
+        <li><b>#처리:</b> "당신은 텍스트 기반 어드벤처 게임입니다"</li>
+        <li><b>#출력:</b> 상태창 · 장면 설명 · 선택지</li>
+      </ul>
+    </div>
+    <div class="game-mock">
+      <div class="gm-status">❤ 100 · 📍 서울 · 🎒 레이저 총 · 진행률 10%</div>
+      <div class="gm-scene">하늘이 기괴한 보랏빛으로 물들고, 도시 위로 정체불명의 신호가 깜빡입니다…</div>
+      <div class="gm-choices"><span>1. 신호를 추적한다</span><span>2. 시민을 대피시킨다</span><span>3. 본부에 연락한다</span></div>
+    </div>
+  </div>
+  <div class="foot"><span>What is it</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="2">
+  <h2>실습 ① 외계인 침공 게임</h2>
+  <div class="body g2" style="grid-template-columns:1.15fr 1fr">
+    <div class="prompt pre small-p" style="font-size:13px;line-height:1.36"><span class="lab">1) #입력<em class="where">📍 Gemini 새 채팅 → [1)+2) 한 번에 복사] 버튼으로 함께 붙여넣기</em></span>#입력
+[게임 목적]
+- 외계인 침략 계획을 밝혀내고 저지함으로써 지구를 구하는 게임
+[플레이어가 해야 할 일]
+- 지구의 여러 도시와 외계인 기지를 탐험한다
+- 다양한 NPC들과 상호 작용하고 정보를 수집한다
+- 논리적 사고를 통해 퍼즐을 해결한다
+- 임무 수행에 도움이 될 유용한 아이템을 수집한다
+- 외계인 전투에 참여해 적들을 물리친다
+[플레이어의 특징]
+- 영웅적이고 용감하며, 항상 지구를 구하기 위해 최선을 다한다
+[도전과 장애물]
+- 도시의 위험한 외계 생명체와 마주쳐 싸운다
+- 외계인 기지에 설치된 위험한 함정을 헤쳐 나간다
+- 외계인 지도자와 대결해야 한다
+[게임 진행 조건]
+- 적에게 공격당하면 전투에 참여한다
+- 수집한 아이템을 사용하여 장애물을 극복한다
+- NPC와 상호 작용할 때 대화 옵션을 선택한다
+- 게임 도중 내리는 선택이 이야기와 진행에 영향을 미친다
+- 상태창을 통해 게임 진행 상태가 표시된다
+- 반드시 한 장면씩 진행한다
+[게임 엔딩]
+- 외계인 본거지에 도달하고 최후의 전투에 참여한다</div>
+    <div>
+      <div class="prompt pre small-p" style="font-size:13.5px"><span class="lab">2) #처리 · #출력<em class="where">📍 1)과 함께 붙여넣기 → 번호로 답하며 진행</em></span>#처리
+당신은 "텍스트 기반 어드벤처 게임"입니다.
+당신의 목표는 외계인의 침략을 저지하고 지구를 안전하게 지키는 게임을 대화 형식으로 제공하는 것입니다.
+상단의 입력 내용을 게임 전체에 반영해 전체 구조를 설계합니다.
+설계 내용을 설명할 필요는 없습니다.
+대화 형식으로 지금부터 게임을 시작합니다.
+#출력
+[상태창]
+[장면 설명]
+[선택지]</div>
+      <button class="copyall" type="button">1) + 2) 한 번에 복사</button>
+      <p class="note">NPC = 게임 속에서 내가 아닌 등장인물. 번호를 골라 답하면 다음 장면으로 넘어갑니다.</p>
+    </div>
+  </div>
+  <div class="foot"><span>Alien Game</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="2">
+  <h2>실습 ② 아이를 위한 스토리텔링 게임</h2>
+  <div class="body g2">
+    <div class="prompt pre small-p"><span class="lab">실습 · 유니콘 나라 동화 게임<em class="where">📍 Gemini 새 채팅 → 같은 채팅에서 번호로 답하며 진행</em></span>#입력
+[주인공] = 서아
+[나이와 성별] = 4살 여아
+[스토리] = 반려견 밀크와 산책하던 주인공이 아기 유니콘을 만나 유니콘 나라를 여행하고 집으로 돌아옵니다
+#처리
+당신은 "스토리텔링 게임"입니다. 당신의 목표는 [주인공]이 등장하는 [스토리]를 가진 게임을 제공하는 것입니다.
+이 게임은 [나이와 성별]을 대상으로 하며, 반드시 어떠한 폭력성도 없으며, 안전하고 행복한 결말을 맞이해야 합니다.
+전체 게임은 5분 이내에 완료됩니다.
+각 장면에는 선택지가 제공되고, 플레이어가 선택할 때까지 대기합니다.
+반드시 한 장면씩 진행합니다.
+이러한 규칙을 기반으로 당신의 상상력을 발휘하여 게임의 전체 구조를 설계합니다.
+설계 내용을 설명할 필요는 없습니다.
+대화 형식으로 지금부터 게임을 시작합니다.</div>
+    <div>
+      <p class="lead">[주인공] · [나이와 성별] · [스토리]만 바꾸면 <b>세상에 하나뿐인 동화</b>가 됩니다. 어제 배운 함수형이죠.</p>
+      <ul class="list">
+        <li>조카·자녀 이름을 넣어 잠자기 전 동화로</li>
+        <li>"5분 이내" 대신 "10장면으로"처럼 길이 조절</li>
+        <li>아이 대상이니 폭력성 없음 · 행복한 결말을 꼭 넣기</li>
+      </ul>
+    </div>
+  </div>
+  <div class="foot"><span>Storytelling Game</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="2">
+  <h2>게임 패턴 더 재밌게 쓰기</h2>
+  <div class="body g3">
+    <div class="panel"><h3>소리로 듣기</h3><p>휴대폰 Gemini 앱에서 실행하면 목소리로 읽어 주고, 나도 말로 번호를 답할 수 있어요. 설정에서 목소리 변경 가능</p></div>
+    <div class="panel"><h3>내 게임 만들기</h3><p>게임 목적·규칙을 바꾸면 추리 게임, 면접 연습 게임, 영어 회화 게임도 됩니다. 게임을 잘 아는 사람이 더 디테일하게 만들 수 있어요</p></div>
+    <div class="panel flat"><h3>도전: 진짜 동화책</h3><p>파이썬과 이미지 생성 API를 쓰면 장면마다 그림을 만들고 마지막에 <b>PDF 동화책</b>으로 저장할 수 있습니다</p></div>
+  </div>
+  <div class="foot"><span>Tips</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="2">
+  <h2>추가 실습 ③ 협상 롤플레이 게임</h2>
+  <div class="body g2">
+    <div class="prompt pre small-p"><span class="lab">실습 · 까다로운 바이어와 협상하기<em class="where">📍 Gemini 새 채팅 → 같은 채팅에서 영어·한국어로 답하며 진행</em></span>지금부터 무역 협상 롤플레이 게임을 합니다.
+#역할
+- 당신: 베트남 식품 유통회사 구매 담당 "Mr. Nam" (가격에 매우 까다로움)
+- 나: 한국 라면 수출회사 영업 담당
+#규칙
+- 한 번에 한 턴씩, 당신이 먼저 말을 겁니다
+- 매 턴 끝에 [상태창] 표시: 신뢰도(0~100), 현재 제안 단가, 남은 턴
+- 총 5턴, 단가를 $0.80 이상으로 지키면서 계약하면 승리
+- 게임이 끝나면 내 협상에서 잘한 점 2개, 아쉬운 점 2개 피드백</div>
+    <div>
+      <div class="steps tight">
+        <div><span class="n">1</span><p>복사 → Gemini 새 채팅에 붙여넣기</p></div>
+        <div><span class="n">2</span><p>Mr. Nam이 말을 걸면 <b>같은 채팅</b>에 내 대답 쓰기 (한국어도 OK)</p></div>
+        <div><span class="n">3</span><p>[상태창]의 신뢰도·단가를 보며 5턴 진행</p></div>
+        <div><span class="n">4</span><p>끝나면 피드백 확인 → 옆 사람과 점수 비교</p></div>
+      </div>
+      <p class="note" style="margin-top:10px">역할만 바꾸면 <b>면접 연습</b>, <b>클레임 대응 연습</b>도 똑같이 돼요.</p>
+    </div>
+  </div>
+  <div class="foot"><span>Roleplay Game</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="2">
+  <h2>실제로는 이렇게 써요: 게임 플레이</h2>
+  <div class="body g2">
+    <div class="panel">
+      <h3>💼 무역 업무에서</h3>
+      <ul class="list"><li><b>협상 롤플레이</b>: AI가 "단가를 깎으려는 까다로운 바이어"가 되고 나는 영업 담당</li><li><b>신입 교육 퀴즈</b>: "통관에서 서류가 반려됐다. ① ② ③ 중 무엇을?" 선택형 시나리오</li><li><b>면접 연습</b>: AI가 무역회사 면접관, 한 번에 질문 하나씩</li></ul>
+    </div>
+    <div>
+      <div class="prompt pre small-p"><span class="lab">💻 바이브 코딩에서<em class="where">📍 Claude 새 채팅에 붙여넣기 → 결과 확인</em></span>아래 규칙으로 브라우저에서 하는 텍스트 어드벤처 게임을 만들어 주세요
+#규칙
+- 주제: 부산항에서 수출 컨테이너가 사라진 미스터리
+- 장면마다 설명 + 선택지 버튼 3개
+- 화면 위에 상태창 (체력, 모은 단서 수)
+- 5장면 안에 엔딩, 마지막에 "다시 하기" 버튼
+#출력
+index.html 한 파일 (HTML·CSS·JavaScript)</div>
+      <p class="note" style="margin-top:10px">채팅으로 하던 게임 규칙(#입력·#처리·#출력)이 그대로 <b>앱 설계서</b>가 돼요. Claude 오른쪽 미리보기에서 바로 플레이!</p>
+    </div>
+  </div>
+  <div class="foot"><span>In Practice</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="2">
+  <h2>[게임 만들기] 오늘 내가 만들 게임 고르기</h2>
+  <div class="body">
+    <div class="g3">
+      <div class="panel"><h3>🧠 무역 용어 퀴즈 배틀</h3><p>4지선다 10문제, 타이머, 점수·최고 기록</p><p class="note">난이도: ★☆☆ 처음이라면 추천</p></div>
+      <div class="panel"><h3>🔍 사라진 컨테이너 추리</h3><p>장면마다 선택지, 단서 모으기, 엔딩 3개</p><p class="note">난이도: ★★☆ 스토리 좋아하면</p></div>
+      <div class="panel"><h3>💱 환율 업다운 게임</h3><p>오늘의 환율을 맞히기, "더 높아요/낮아요" 힌트</p><p class="note">난이도: ★☆☆ 짧고 간단하게</p></div>
+    </div>
+    <div class="flow" style="margin-top:22px">
+      <div><b>STEP 1 기획</b><span>AI가 묻고 내가 답하기</span></div>
+      <div><b>STEP 2 만들기</b><span>설계서 채워서 코드 받기</span></div>
+      <div><b>STEP 3 플레이</b><span>직접 해 보고 고칠 점 찾기</span></div>
+      <div><b>STEP 4 업그레이드</b><span>효과·레벨·타이머 추가</span></div>
+      <div><b>STEP 5 공유</b><span>링크·파일로 친구에게</span></div>
+    </div>
+    <p class="note" style="margin-top:14px">셋 중 하나 또는 <b>내가 만들고 싶은 게임</b>도 OK. 도구는 <b>Claude</b> (<span class="url">claude.ai</span>) — 오른쪽에 게임이 바로 실행돼요.</p>
+  </div>
+  <div class="foot"><span>Make a Game</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="2">
+  <h2>[게임 만들기] STEP 1 기획: AI가 묻고 내가 답하기</h2>
+  <div class="body g2">
+    <div class="prompt pre small-p"><span class="lab">STEP 1 · 역질문으로 기획<em class="where">📍 Claude 새 채팅에 붙여넣기 → 질문마다 같은 채팅에 답하기</em></span>저는 브라우저에서 하는 간단한 웹 게임을 만들고 싶어요.
+만들고 싶은 게임: (예: 무역 용어 퀴즈 배틀)
+바로 만들지 말고, 좋은 게임을 만들기 위해 필요한 것을
+한 번에 하나씩 질문해 주세요. (최대 5개)
+질문마다 고를 수 있는 보기 ①②③을 같이 주세요.
+질문이 끝나면 지금까지 답을 "게임 설계서" 표로 정리만 해 주세요.</div>
+    <div>
+      <div class="steps tight">
+        <div><span class="n">1</span><p><span class="url">claude.ai</span> → 왼쪽 위 <b>새 채팅</b></p></div>
+        <div><span class="n">2</span><p>(괄호) 안을 내 게임으로 바꾸고 보내기</p></div>
+        <div><span class="n">3</span><p>질문이 오면 <b>번호</b>나 짧은 말로 답하기</p></div>
+        <div><span class="n">4</span><p>마지막에 나온 <b>게임 설계서</b> 확인 → 다음 STEP으로</p></div>
+      </div>
+      <p class="note" style="margin-top:10px">사용한 패턴: <b>역질문</b>(AI가 먼저 묻기) + <b>질문 개선</b>(빠진 정보 채우기)</p>
+    </div>
+  </div>
+  <div class="foot"><span>Step 1 Plan</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="2">
+  <h2>[게임 만들기] STEP 2 만들기: 설계서 → 게임 코드</h2>
+  <div class="body g2">
+    <div class="prompt pre small-p"><span class="lab">STEP 2 · 게임 만들기 (빈칸 채우기)<em class="where">📍 같은 채팅에 이어서 (STEP 1 채팅) · 처음이면 Claude 새 채팅</em></span>#역할
+초보자를 돕는 친절한 웹 게임 개발자
+#게임
+- 이름: (           )
+- 목표: (예: 10문제 중 많이 맞히기)
+- 규칙: (예: 4지선다, 한 문제에 15초)
+- 점수: (예: 정답 +10점, 오답 0점)
+- 끝: (예: 10문제 후 점수와 "다시 하기" 버튼)
+#화면
+- 큰 글씨, 큰 버튼, 모바일에서도 잘 보이게
+- 정답이면 초록색, 오답이면 빨간색으로 잠깐 표시
+#제한
+> HTML·CSS·JavaScript 한 파일, 외부 라이브러리 금지
+#출력
+index.html 전체 코드 + 게임 방법 3줄</div>
+    <div>
+      <div class="steps tight">
+        <div><span class="n">1</span><p>STEP 1 채팅이면 "위 설계서로" + 이 틀을 붙여 보내기</p></div>
+        <div><span class="n">2</span><p>( ) 빈칸을 내 게임으로 채우기</p></div>
+        <div><span class="n">3</span><p>오른쪽에 <b>미리보기</b>가 뜨면 바로 플레이!</p></div>
+      </div>
+      <div class="panel warn" style="margin-top:10px">
+        <h3>미리보기가 안 뜨면</h3>
+        <p>같은 채팅에 "<b>미리보기로 실행되게 다시 만들어 줘</b>" 입력</p>
+      </div>
+      <p class="note" style="margin-top:8px">사용한 패턴: <b>마크다운 · 페르소나 · 강도</b> (#제한)</p>
+    </div>
+  </div>
+  <div class="foot"><span>Step 2 Build</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="2">
+  <h2>[게임 만들기] STEP 3 플레이하고 고치기</h2>
+  <div class="body g2">
+    <div>
+      <h3 style="margin-bottom:8px">해 보면서 체크 ✅</h3>
+      <ul class="list">
+        <li>규칙이 처음 보는 사람도 <b>바로 이해</b>되나요?</li>
+        <li>버튼이 잘 눌리나요? 글씨가 잘 보이나요?</li>
+        <li>너무 쉽거나 너무 어렵지 않나요?</li>
+        <li>점수·끝 화면이 제대로 나오나요?</li>
+        <li>이상하게 멈추거나 안 되는 곳은?</li>
+      </ul>
+    </div>
+    <div>
+      <div class="prompt pre small-p"><span class="lab">고치기 · 수정 요청 틀<em class="where">📍 같은 채팅에 이어서 (게임 만든 채팅)</em></span>[반드시] 지금 게임의 규칙과 점수 방식은 절대 바꾸지 마세요
+[고칠 것]
+1. (예: 오답일 때 정답이 무엇인지 2초 동안 보여 주기)
+2. (예: 시작 화면에 "게임 방법" 버튼 추가)
+[출력] 바뀐 부분 2줄 설명 + 전체 코드</div>
+      <div class="prompt pre small-p" style="margin-top:10px"><span class="lab">버그가 났을 때<em class="where">📍 같은 채팅에 이어서</em></span>게임에서 (어떤 상황)일 때 (무슨 문제)가 생겨요.
+바로 고치지 말고, 원인 후보 3개를 쉬운 말로 먼저 알려 준 다음
+가장 가능성 높은 원인을 고친 전체 코드를 주세요.</div>
+    </div>
+  </div>
+  <div class="foot"><span>Step 3 Play &amp; Fix</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="2">
+  <h2>[게임 만들기] STEP 4 업그레이드 미션</h2>
+  <div class="body">
+    <p class="lead" style="margin-bottom:12px">하나씩 골라서 <b>같은 채팅</b>에 보내 보세요. 2개 이상 성공하면 미션 클리어!</p>
+    <div class="g3">
+      <div class="prompt pre small-p"><span class="lab">⏱ 타이머<em class="where">📍 같은 채팅에 이어서</em></span>한 문제(장면)마다 15초 타이머를 넣고, 시간이 끝나면 자동으로 다음으로 넘어가게 해 주세요. 기존 기능은 그대로, 전체 코드로.</div>
+      <div class="prompt pre small-p"><span class="lab">🏆 최고 기록<em class="where">📍 같은 채팅에 이어서</em></span>게임이 끝나면 지금 점수와 "최고 기록"을 같이 보여 주세요. 최고 기록은 새로고침해도 남게 해 주세요. 기존 기능은 그대로, 전체 코드로.</div>
+      <div class="prompt pre small-p"><span class="lab">📈 난이도<em class="where">📍 같은 채팅에 이어서</em></span>시작 화면에 쉬움·보통·어려움 버튼을 넣고, 난이도에 따라 시간이나 문제가 달라지게 해 주세요. 기존 기능은 그대로, 전체 코드로.</div>
+      <div class="prompt pre small-p"><span class="lab">🎉 효과<em class="where">📍 같은 채팅에 이어서</em></span>정답이면 화면에 축하 효과(이모지가 튀어 오르기)를, 오답이면 화면이 살짝 흔들리게 해 주세요. 기존 기능은 그대로, 전체 코드로.</div>
+      <div class="prompt pre small-p"><span class="lab">🎨 테마<em class="where">📍 같은 채팅에 이어서</em></span>게임 디자인을 (예: 항구와 컨테이너 느낌, 파란색·주황색)으로 바꿔 주세요. 글씨와 버튼은 더 크게. 기존 기능은 그대로, 전체 코드로.</div>
+      <div class="prompt pre small-p"><span class="lab">🧩 문제 추가<em class="where">📍 같은 채팅에 이어서</em></span>무역 용어 문제를 20개 더 만들어서 게임에 넣고, 매번 10개를 무작위로 골라 나오게 해 주세요. 기존 기능은 그대로, 전체 코드로.</div>
+    </div>
+  </div>
+  <div class="foot"><span>Step 4 Upgrade</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="2">
+  <h2>[게임 만들기] STEP 5 저장하고 공유하기</h2>
+  <div class="body g2">
+    <div>
+      <div class="panel">
+        <h3>방법 ① Claude 링크로 공유</h3>
+        <p>게임 미리보기 오른쪽 위 <b>공유(게시)</b> → 링크 복사 → 카톡·밴드로 보내기</p>
+        <p class="note">받은 사람은 링크만 누르면 바로 플레이</p>
+      </div>
+      <div class="panel flat" style="margin-top:12px">
+        <h3>방법 ② 파일로 저장</h3>
+        <div class="steps tight">
+          <div><span class="n">1</span><p>코드 <b>복사</b> → VS Code에서 prompt_site 폴더에 <b>game.html</b> 새 파일</p></div>
+          <div><span class="n">2</span><p><kbd>Ctrl</kbd>+<kbd>V</kbd> → <kbd>Ctrl</kbd>+<kbd>S</kbd> → 더블 클릭해서 실행</p></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="prompt pre small-p"><span class="lab">게임 리뷰 받기 (리플렉션)<em class="where">📍 Claude 새 채팅 → 친구 게임 코드나 소감 붙여넣기</em></span>당신은 게임 기획자이자 까다로운 플레이어입니다.
+아래 게임을 해 본 소감과 코드를 보고
+재미 · 쉬운 규칙 · 디자인 · 버그 4가지를 10점 만점으로 평가하고
+가장 먼저 고치면 좋을 것 1가지를 알려 주세요.
+#소감
+(직접 해 보고 느낀 점 2줄)</div>
+      <p class="note" style="margin-top:10px">옆 사람과 <b>링크를 바꿔서</b> 서로 플레이 → 점수와 한 줄 피드백 남기기</p>
+    </div>
+  </div>
+  <div class="foot"><span>Step 5 Share</span><span class="c"></span></div>
+</section>
+
+<section class="slide cover" data-sec="3">
+  <div class="big-no">13</div>
+  <div class="kicker">Question Refinement</div>
+  <h1>질문 개선 패턴</h1>
+  <p class="sub">답을 받기 전에, 내 질문부터 더 좋은 질문으로</p>
+  <div class="foot"><span>Refinement</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="3">
+  <h2>질문을 질문하기</h2>
+  <div class="body g2">
+    <div class="panel warn">
+      <h3>일반</h3>
+      <p>질문 → AI가 <b>바로</b> 답함</p>
+      <p class="note">아는 사람이 질문도 잘합니다. 모르는 분야는 질문 자체가 두루뭉술해서 답도 두루뭉술</p>
+    </div>
+    <div class="panel">
+      <h3>질문 개선 패턴</h3>
+      <p>질문 → AI가 내 질문을 <b>분석</b> → 더 나은 질문으로 <b>개선</b> → 개선된 질문으로 답</p>
+      <p class="note">어제 배운 '뒤집힌 상호작용'처럼, AI가 나를 도와 질문을 다듬어 줍니다</p>
+    </div>
+  </div>
+  <div class="foot"><span>Concept</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="3">
+  <h2>질문 개선 세 가지 방법</h2>
+  <div class="body g3">
+    <div class="prompt pre small-p"><span class="lab">방법 1 · 개선 후 답변<em class="where">📍 참고용 (틀) · 실습은 다음 장</em></span>제 질문에 바로 답하지 말고, 먼저 제 질문을 분석해서 더 나은 질문으로 개선해 주세요
+개선된 질문을 보여준 뒤, 그 질문에 스스로 답하세요</div>
+    <div class="prompt pre small-p"><span class="lab">방법 2 · 여러 버전 제시<em class="where">📍 참고용 (틀) · 실습은 다음 장</em></span>제 질문을 3가지 다른 방향으로 개선해 주세요
+각 버전이 어떤 목적에 맞는지 설명하고
+제가 선택하면 그 버전으로 답하세요</div>
+    <div class="prompt pre small-p"><span class="lab">방법 3 · 문제 진단 먼저<em class="where">📍 참고용 (틀) · 실습은 다음 장</em></span>제 질문의 문제점(모호함, 잘못된 전제, 누락된 맥락)을 먼저 지적하고
+수정된 질문으로 답변하세요</div>
+  </div>
+  <p class="note" style="font-size:18px!important">이 문장 뒤에 "질문 : ○○○"을 붙여서 쓰면 됩니다. 다음 슬라이드부터 하나씩 실습해요.</p>
+  <div class="foot"><span>3 Methods</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="3">
+  <h2>실습 ① 단순 개선형</h2>
+  <div class="body g2">
+    <div class="prompt pre"><span class="lab">실습 · 단순 개선형<em class="where">📍 Gemini 새 채팅에 붙여넣기 → Enter</em></span>아래 질문을 더 명확하고 답변 가능한 상태로 개선한 뒤
+개선된 질문으로 답변하세요
+개선한 이유도 한 줄로 설명하세요
+질문 : "AI를 무역에 활용하려면 어떻게 해야 하나요"</div>
+    <div>
+      <p class="lead">AI가 "어떤 업무에? 회사 규모는? 기간은?"을 넣어 질문을 구체적으로 바꿔 줍니다.</p>
+      <div class="panel" style="margin-top:10px">
+        <p class="small"><b>개선 예:</b> "직원 30명 규모 무역회사의 수출 서류 업무에, 개발자 없이 3개월 안에 AI를 도입하려면 어떤 도구와 순서로 시작해야 하나요?"</p>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span>Simple</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="3">
+  <h2>실습 ② 다방향 분기형 · ③ 전제 교정형</h2>
+  <div class="body g2">
+    <div class="prompt pre"><span class="lab">실습 · 다방향 분기형<em class="where">📍 Gemini 새 채팅에 붙여넣기 → Enter</em></span>제 질문을 3가지 다른 해석으로 개선해 주세요
+각 버전이 어떤 상황에 맞는지 설명하고
+제가 고르면 그것으로 답하세요
+질문 : "수출 자동화는 어떻게 시작하나요?"</div>
+    <div class="prompt pre"><span class="lab">실습 · 전제 교정형<em class="where">📍 Gemini 새 채팅에 붙여넣기 → Enter</em></span>제 질문에 잘못된 전제나 오해가 있으면
+먼저 그것을 지적하고 교정된 질문으로 다시 물어봐 주세요
+그 다음 교정된 질문에 답하세요
+질문 : "FTA를 쓰면 관세를 안 내도 되는 건가요?"</div>
+  </div>
+  <p class="note" style="font-size:18px!important">'전제' = 질문 속에 깔린 생각. "FTA = 관세 0원"은 잘못된 전제일 수 있어요. AI가 이걸 먼저 바로잡아 줍니다.</p>
+  <div class="foot"><span>Branch &amp; Premise</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="3">
+  <h2>질문 보내기 전 체크리스트</h2>
+  <div class="body g2">
+    <ul class="list">
+      <li><b>대상</b>이 명확한가?</li>
+      <li><b>범위</b>가 좁혀졌는가?</li>
+      <li><b>목적</b>이 포함되어 있는가?</li>
+      <li><b>현재 상태</b>가 포함되어 있는가?</li>
+      <li><b>잘못된 전제</b>는 없는가?</li>
+    </ul>
+    <div class="prompt pre"><span class="lab">실습 · 내 질문 개선하기<em class="where">📍 Gemini 새 채팅에 붙여넣기 → Enter</em></span>"Z세대가 좋아할 만한 이벤트 아이디어로 어떤 것들이 있을까요?"
+이 질문을 더 나은 버전으로 개선해 주세요.
+질문의 풍부한 맥락을 반영해 구체적이고 자세한 질문을 만들어 주세요.</div>
+  </div>
+  <div class="foot"><span>Checklist</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="3">
+  <h2>실제로는 이렇게 써요: 질문 개선</h2>
+  <div class="body g2">
+    <div class="panel">
+      <h3>💼 무역 업무에서</h3>
+      <ul class="list"><li>상사의 막연한 지시("베트남 시장 좀 알아봐")를 <b>구체적인 조사 질문</b>으로 바꾸기</li><li>거래처·관세사에게 문의 메일 보내기 전에 <b>빠진 정보</b> 점검</li><li>검색이 잘 안 될 때 <b>검색어·질문</b> 다듬기</li></ul>
+    </div>
+    <div>
+      <div class="prompt pre small-p"><span class="lab">💻 바이브 코딩에서<em class="where">📍 Claude 새 채팅에 붙여넣기 → 결과 확인 → 번호 고르기</em></span>"구구단 웹페이지 만들어 줘"
+이 요청을 바이브 코딩용으로 더 나은 요청문으로 개선해 주세요.
+빠진 정보(누가 쓰는지, 기능, 화면, 기술)를 채운
+개선 버전 2개를 보여 주세요.
+제가 하나를 고르면, 그 버전으로 코드를 만들어 주세요.</div>
+      <p class="note" style="margin-top:10px">바로 만들게 하면 AI 마음대로. <b>요청문부터 다듬고</b> 만들면 한 번에 원하는 결과에 가까워져요.</p>
+    </div>
+  </div>
+  <div class="foot"><span>In Practice</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="3">
+  <h2>추가 실습: 질문 업그레이드 배틀</h2>
+  <div class="body g2">
+    <div>
+      <div class="steps tight">
+        <div><span class="n">1</span><p>짝꿍과 함께, 각자 <b>막연한 질문</b> 하나 쓰기 <br>(예: "취업 잘하려면?", "수출 어떻게 해?")</p></div>
+        <div><span class="n">2</span><p>오른쪽 프롬프트에 넣어 <b>점수 + 개선 버전</b> 받기</p></div>
+        <div><span class="n">3</span><p>처음 질문과 개선 질문을 <b>각각 새 채팅</b>에 넣어 답 비교</p></div>
+        <div><span class="n">4</span><p>짝꿍과 "누구 답이 더 쓸모 있나" 비교</p></div>
+      </div>
+    </div>
+    <div class="prompt pre small-p"><span class="lab">질문 채점 + 개선<em class="where">📍 Gemini 새 채팅</em></span>내 질문: "(여기에 내 질문)"
+아래 5가지 기준으로 내 질문을 각 2점 만점으로 채점해 주세요.
+대상 · 범위 · 목적 · 현재 상태 · 잘못된 전제
+점수표를 보여 준 뒤, 10점 만점짜리 개선 질문 3개를 만들어 주세요.
+그중 가장 좋은 1개에 ★를 붙여 주세요.</div>
+  </div>
+  <div class="foot"><span>Question Battle</span><span class="c"></span></div>
+</section>
+
+<section class="slide cover" data-sec="4">
+  <div class="big-no">14</div>
+  <div class="kicker">Fact Check List</div>
+  <h1>팩트 체크 목록 패턴</h1>
+  <p class="sub">AI가 스스로 "이건 확인이 필요해요"를 목록으로</p>
+  <div class="foot"><span>Fact Check</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="4">
+  <h2>AI는 "모른다"고 잘 말하지 않는다</h2>
+  <div class="body g2">
+    <div>
+      <p class="lead"><b>환각</b>: AI가 모르는 것을 그럴듯하게 지어내는 것. 모르면 모른다고 하면 되는데, AI는 일단 답을 만들어 냅니다.</p>
+      <ul class="list">
+        <li>특히 위험: <b>숫자, 날짜, 법·제도, 논문·출처</b></li>
+        <li>의료·법률·관세처럼 전문 분야일수록 주의</li>
+      </ul>
+    </div>
+    <div class="panel">
+      <h3>그래서 이 패턴은</h3>
+      <p>검증이 필요한 항목을 AI가 <b>스스로 뽑아서 목록으로</b> 정리하게 합니다.</p>
+      <p class="note">목록이 나와도 100%는 아닙니다. 최종 확인은 반드시 사람이 공식 자료로!</p>
+    </div>
+  </div>
+  <div class="foot"><span>Hallucination</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="4">
+  <h2>두 가지 방법</h2>
+  <div class="body g2">
+    <div class="prompt pre"><span class="lab">방법 1 · 답변 후 목록 추가<em class="where">📍 참고용 (틀) · 실습은 다음 장</em></span>아래 주제로 답변을 작성하세요
+답변 마지막에 반드시 아래 형식으로 팩트 체크 목록을 추가하세요
+## 팩트체크 필요항목
+| 항목 | 내용 | 검증 방법 | 신뢰도 |
+
+주제 : 베트남에 화장품을 수출할 때 필요한 인증</div>
+    <div class="prompt pre"><span class="lab">방법 2 · 답변 전 위험 예고<em class="where">📍 참고용 (틀) · 실습은 다음 장</em></span>답변을 작성하기 전에, 이 주제에서 틀리기 쉬운 항목이 무엇인지 먼저 나열하세요
+그 항목을 특히 주의하며 답변을 작성하고 마지막에 검증 목록을 제시하세요
+
+주제 : 미국으로 식품을 수출할 때 필요한 절차</div>
+  </div>
+  <p class="note" style="font-size:18px!important">표의 첫 줄(칸 이름)만 주면 나머지 칸은 AI가 채웁니다. 어제 배운 마크다운 표(|)예요.</p>
+  <div class="foot"><span>2 Methods</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="4">
+  <h2>실습 ① 기본 검증 목록형</h2>
+  <div class="body g2">
+    <div class="prompt pre"><span class="lab">실습 · 신호등 검증 목록<em class="where">📍 Gemini 새 채팅에 붙여넣기 → Enter</em></span>아래 질문에 답변하세요
+답변 끝에 반드시 팩트 체크 목록을 작성하세요
+팩트체크 목록 형식
+- 🔴반드시 확인 : 틀리면 큰 피해가 생기는 항목
+- 🟡확인 권장 : 바뀔 가능성이 있는 항목
+- 🟢참고 수준 : 개략적으로 맞지만 세부는 다를 수 있는 항목
+
+질문 : "한미 FTA 적용 시 원산지 증명서 발급 절차는?"</div>
+    <div>
+      <p class="lead">어제 배운 이모지 우선순위를 검증에 쓴 것입니다. 빨간 항목부터 확인하면 돼요.</p>
+      <p class="note">이모지는 없어도 되지만, 있으면 한눈에 보입니다. 실제 업무에서는 AI 답대로 바로 처리하지 말고 확인부터!</p>
+    </div>
+  </div>
+  <div class="foot"><span>Traffic Light</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="4">
+  <h2>실습 ② 신뢰도 점수형</h2>
+  <div class="body g2">
+    <div class="prompt pre"><span class="lab">실습 · 신뢰도 점수<em class="where">📍 Gemini 새 채팅에 붙여넣기 → Enter</em></span>아래 내용에 대한 답변을 하되
+각 주요 사실에 신뢰도 점수(0~100%)와 그 점수를 준 이유를 함께 표시하세요
+
+형식 : {사실 내용} [신뢰도 : xx%] (이유 : ~)
+질문 : "베트남 수출 시 주요 인증 요건과 관세율은?"</div>
+    <div>
+      <div class="trust">
+        <div><span>관세율 0% (한-베 FTA)</span><i style="width:70%"></i><b>70%</b></div>
+        <div><span>식품은 위생 인증 필요</span><i style="width:95%"></i><b>95%</b></div>
+        <div><span>인증 처리 기간 2주</span><i style="width:45%" class="low"></i><b>45%</b></div>
+      </div>
+      <p class="note">예시 그림입니다. 점수가 낮은 항목부터 확인하세요. 수출할 나라를 고를 때도 이렇게 조사해 볼 수 있어요.</p>
+    </div>
+  </div>
+  <div class="foot"><span>Confidence Score</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="4">
+  <h2>실제로는 이렇게 써요: 팩트 체크</h2>
+  <div class="body g2">
+    <div class="panel">
+      <h3>💼 무역 업무에서</h3>
+      <ul class="list"><li>관세율·인증·FTA 규정 답변에 <b>"직접 확인할 것"</b> 목록 붙이기</li><li>보고서 숫자(수출액, 점유율)마다 <b>출처 확인</b> 표시</li><li>확인 목록을 그대로 <b>관세청·KOTRA 자료 대조</b>에 사용</li></ul>
+    </div>
+    <div>
+      <div class="prompt pre small-p"><span class="lab">💻 바이브 코딩에서<em class="where">📍 Claude 새 채팅에 붙여넣기 → 결과 확인</em></span>환율을 인터넷에서 받아와 원화를 달러로 바꿔 주는 웹페이지를 만들어 주세요 (HTML 한 파일)
+코드 뒤에 "제가 직접 확인해야 할 것" 목록을 붙여 주세요
+- 사용한 외부 서비스(API) 이름·주소와 무료 여부
+- 실제로 동작하지 않을 수 있는 부분
+- 보안상 주의할 점
+각 항목에 🟢확실 🟡확인 권장 🔴꼭 확인 표시를 붙여 주세요</div>
+      <p class="note" style="margin-top:10px">AI가 만든 코드도 <b>그럴듯하게 틀릴 수</b> 있어요. 특히 외부 서비스 주소·무료 여부는 꼭 확인 목록으로 받으세요.</p>
+    </div>
+  </div>
+  <div class="foot"><span>In Practice</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="4">
+  <h2>추가 실습: AI 거짓말 탐정</h2>
+  <div class="body g2">
+    <div class="prompt pre small-p"><span class="lab">함정 질문 + 신호등<em class="where">📍 Gemini 새 채팅</em></span>아래 질문에 답한 뒤, 답변의 각 주장 옆에
+🟢확실 🟡확인 필요 🔴틀릴 수 있음 표시를 붙이고
+마지막에 "질문에 잘못된 전제가 있는지"도 따로 검토해 주세요.
+질문: 한국-베트남 FTA로 한국산 라면은 베트남에서 관세가 0%이고,
+2025년부터는 원산지 증명서도 필요 없어졌죠? 정확한 내용을 알려 주세요.</div>
+    <div>
+      <div class="steps tight">
+        <div><span class="n">1</span><p>Gemini 새 채팅에 붙여넣기 → 🔴🟡 항목 확인</p></div>
+        <div><span class="n">2</span><p>같은 질문을 <span class="url">claude.ai</span> 새 채팅에도 → 두 AI 비교</p></div>
+        <div><span class="n">3</span><p>🔴 하나를 골라 <b>구글 검색</b>(관세청·KOTRA)으로 직접 확인</p></div>
+      </div>
+      <p class="note" style="margin-top:10px">질문 속에 일부러 <b>틀린 전제</b>를 숨겨 놨어요. AI가 찾아내는지가 관전 포인트! 탐정이 되어 AI의 실수를 잡아 보세요.</p>
+    </div>
+  </div>
+  <div class="foot"><span>Lie Detector</span><span class="c"></span></div>
+</section>
+
+<section class="slide cover" data-sec="5">
+  <div class="big-no">15</div>
+  <div class="kicker">Meta Language</div>
+  <h1>메타 언어 생성 패턴</h1>
+  <p class="sub">AI와 나만 아는 비밀 코드(단축 명령어) 만들기</p>
+  <div class="foot"><span>Meta Language</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="5">
+  <h2>긴 명령을 짧은 약속어로</h2>
+  <div class="body g2">
+    <div>
+      <p class="lead">"핵심만 3줄, 전문 용어 빼고, 결론 먼저…"를 매번 쓰기 귀찮다면? <b>/요약</b> 한 단어에 그 뜻을 담아 두는 겁니다.</p>
+      <ul class="list">
+        <li><b>/(슬래시) + 이름</b>이 메타 언어의 기본</li>
+        <li>① 먼저 단축어 정의를 AI에게 보내고</li>
+        <li>② 그다음부터는 단축어만 써서 질문</li>
+      </ul>
+    </div>
+    <div class="meta-demo">
+      <input class="txt" id="metaIn" value="/요약 베트남 FTA 활용 방법 알려줘" aria-label="메타 언어 입력">
+      <div class="meta-arrow">AI가 알아듣는 뜻 ↓</div>
+      <div class="meta-out" id="metaOut"></div>
+      <div class="meta-keys"><span>/요약</span><span>/코드</span><span>/비교</span></div>
+    </div>
+  </div>
+  <div class="foot"><span>Shortcut</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="5">
+  <h2>실습 ① /요약 · /코드 · /비교</h2>
+  <div class="body g2">
+    <div class="prompt pre small-p"><span class="lab">1단계 · 단축어 정의 먼저 보내기<em class="where">📍 Gemini 새 채팅에 먼저 보내기</em></span>이 대화에서 아래 명령어를 사용합니다
+각 명령어의 정의를 정확히 기억하고 실행하세요
+/요약 = 핵심만 3줄, 전문 용어 제거, 무역 실무자 기준, 결론 먼저 -&gt; 이유 순서로 작성
+/코드 = python 작성, 주석 한국어, 예외 처리 포함, 실행 가능한 완성 코드, 설명 없이 코드만 출력
+/비교 = 2~4개 대안을 표로 정리, 항목 : 장점, 단점, 비용, 난이도, 추천 상황, 마지막 행에 종합 추천 추가</div>
+    <div>
+      <div class="prompt pre"><span class="lab">2단계 · 단축어로 질문<em class="where">📍 같은 채팅에 이어서 입력</em></span>/요약 베트남 FTA 활용 방법 알려줘</div>
+      <div class="prompt pre" style="margin-top:12px"><span class="lab">이어서 해 보기<em class="where">📍 같은 채팅에 이어서 입력</em></span>/비교 베트남 FTA 활용 방법 알려줘</div>
+      <p class="note">같은 질문인데 /요약은 3줄로, /비교는 표로 나옵니다.</p>
+    </div>
+  </div>
+  <div class="foot"><span>Practice 1</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="5">
+  <h2>실습 ② 편집자의 유의어·반의어 단축어</h2>
+  <div class="body g2">
+    <div class="prompt pre small-p"><span class="lab">1단계 · 정의 보내기<em class="where">📍 Gemini 새 채팅에 먼저 보내기</em></span>#입력
+[독자] = 초등학생
+[단축어1] = "/유:[단어]:[개수]"라고 요청하면, [단어]에 대한 [독자]가 이해할 수 있는 유의어 [개수]를 제공하고, 가장 추천하는 유의어를 알려주세요
+[단축어2] = "/반:[단어]:[개수]"라고 요청하면, [단어]에 대한 [독자]가 이해할 수 있는 반의어 [개수]를 제공하고, 가장 추천하는 반의어를 알려주세요
+[단축어3] = "/유반:[단어]:[개수]"라고 요청하면, [단축어1]과 [단축어2]를 동시에 수행해 주세요
+#처리
+당신은 "출판사 편집자"입니다
+당신은 [독자] 대상의 교양 도서를 교정하고 있습니다.
+상단의 내용을 기억하고, 내가 단축어를 제공하면 그에 따라 작업을 수행해 주세요
+내가 단축어를 제공할 때까지 대기합니다</div>
+    <div>
+      <div class="prompt pre"><span class="lab">2단계 · 사용하기<em class="where">📍 같은 채팅에 이어서 입력</em></span>/유:금일:2</div>
+      <div class="prompt pre" style="margin-top:12px"><span class="lab">더 해 보기<em class="where">📍 같은 채팅에 이어서 입력</em></span>/유반:기쁘다:3</div>
+      <p class="note">[독자]를 '무역 신입사원'으로 바꾸면 업무용 단어장이 됩니다. 유의어 = 뜻이 비슷한 말, 반의어 = 뜻이 반대인 말</p>
+    </div>
+  </div>
+  <div class="foot"><span>Practice 2</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="5">
+  <h2>메타 언어 활용 팁</h2>
+  <div class="body g3">
+    <div class="panel"><h3>저장해 두기</h3><p>Gemini의 <b>Gems</b>, ChatGPT의 <b>GPTs</b>에 단축어 정의를 넣어 두면 매번 보낼 필요가 없어요</p></div>
+    <div class="panel"><h3>이모지로도 OK</h3><p>🖨 = 인쇄용으로 정리, 📧 = 이메일 형식으로처럼 그림 기호를 약속어로 써도 됩니다</p></div>
+    <div class="panel"><h3>무역 업무에</h3><p>/견적 · /클레임 · /인보이스처럼 자주 쓰는 긴 지시를 줄여 두세요</p></div>
+  </div>
+  <div class="foot"><span>Tips</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="5">
+  <h2>실제로는 이렇게 써요: 메타 언어</h2>
+  <div class="body g2">
+    <div class="panel">
+      <h3>💼 무역 업무에서</h3>
+      <ul class="list"><li>팀 공용 단축어: <b>/메일</b>(영문 비즈니스 메일), <b>/요약</b>(3줄), <b>/번역</b>(영↔한)</li><li>매번 긴 조건을 쓰지 않아 <b>반복 업무 속도</b>가 빨라짐</li><li>단축어 정의를 문서로 공유 → 팀원 모두 <b>같은 품질</b></li></ul>
+    </div>
+    <div>
+      <div class="prompt pre small-p"><span class="lab">💻 바이브 코딩에서<em class="where">📍 Claude 새 채팅에 먼저 보내기 → 같은 채팅에서 "/설명 (코드 붙여넣기)"</em></span>이 대화에서 아래 명령어를 사용합니다. 정의를 기억하고 실행하세요
+/수정 = 기존 기능은 절대 바꾸지 말 것, 바뀐 부분만 3줄로 설명, 전체 코드 다시 출력
+/설명 = 코드를 초보자용으로 부분별 쉬운 말 설명, 코드는 다시 출력하지 말 것
+/점검 = 버그·보안·모바일 화면 문제를 표로 정리, 고치는 방법 포함
+이해했으면 "준비 완료"라고만 답하세요</div>
+      <p class="note" style="margin-top:10px">자주 쓰는 단축어는 Claude <b>프로젝트 지침</b>에 넣어 두면 새 채팅에서도 바로 쓸 수 있어요.</p>
+    </div>
+  </div>
+  <div class="foot"><span>In Practice</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="5">
+  <h2>추가 실습: 나만의 단축어 3개 만들기</h2>
+  <div class="body g2">
+    <div class="prompt pre small-p"><span class="lab">1단계 · 내 단축어 정의 (빈칸 채우기)<em class="where">📍 Gemini 새 채팅에 먼저 보내기</em></span>이 대화에서 아래 명령어를 사용합니다. 정의를 기억하고 실행하세요
+/영메일 = 영어 비즈니스 메일, 제목 포함, 5문장 이내, 정중한 톤, 한국어 뜻 아래에
+/쉽게 = (           )
+/( 내가 정한 이름 ) = (           )
+이해했으면 "준비 완료"라고만 답하세요</div>
+    <div>
+      <div class="prompt pre small-p"><span class="lab">2단계 · 써 보기<em class="where">📍 같은 채팅에 이어서</em></span>/영메일 바이어에게 샘플이 오늘 DHL로 출발했다고 알리기</div>
+      <div class="prompt pre small-p" style="margin-top:10px"><span class="lab">3단계 · 섞어 쓰기<em class="where">📍 같은 채팅에 이어서</em></span>/쉽게 인코텀즈 FOB와 CIF 차이</div>
+      <p class="note" style="margin-top:10px">아이디어: <b>/3줄</b>(3줄 요약), <b>/표</b>(표로), <b>/반박</b>(반대 의견), <b>/면접</b>(면접 예상 질문 5개)</p>
+    </div>
+  </div>
+  <div class="foot"><span>My Shortcuts</span><span class="c"></span></div>
+</section>
+
+<section class="slide cover" data-sec="6">
+  <div class="big-no">16</div>
+  <div class="kicker">Reflection</div>
+  <h1>리플렉션 패턴</h1>
+  <p class="sub">AI를 위한 자기 성찰의 거울 — 초안, 비평, 개선</p>
+  <div class="foot"><span>Reflection</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="6">
+  <h2>바로 답하지 말고, 스스로 고쳐서</h2>
+  <div class="body">
+    <div class="flow" style="grid-template-columns:repeat(4,1fr)">
+      <div><b>AI 초안</b><span>일단 첫 답변 작성</span></div>
+      <div><b>스스로 비평</b><span>약점 · 빠진 것 · 오해할 부분 찾기</span></div>
+      <div><b>스스로 개선</b><span>비평을 반영해 고치기</span></div>
+      <div><b>최종 결과물</b><span>한 번 검증된 답</span></div>
+    </div>
+    <div class="g2" style="margin-top:30px">
+      <div class="prompt pre small-p"><span class="lab">방법 1 · 생성 → 비평 → 개선<em class="where">📍 참고용 (틀) · 실습은 다음 장</em></span>아래 작업을 3단계로 수행하세요
+1단계[초안] : 요청에 대한 첫번째 답변 작성
+2단계[비평] : 초안의 약점, 누락, 개선점을 스스로 분석
+3단계[개선] : 비평을 반영한 최종 버전 작성</div>
+      <div class="prompt pre small-p"><span class="lab">방법 2 · 반복 정제<em class="where">📍 참고용 (틀) · 실습은 다음 장</em></span>초안을 작성하고 N번 스스로 개선하세요
+각 반복마다 무엇을 왜 바꿨는지 한 줄로 기록하세요</div>
+    </div>
+  </div>
+  <div class="foot"><span>Concept</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="6">
+  <h2>실습 ① 초안 · 자기 비평 · 개선본</h2>
+  <div class="body g2">
+    <div class="prompt pre small-p"><span class="lab">실습 · 3단계 리플렉션<em class="where">📍 Gemini 새 채팅에 붙여넣기 → Enter</em></span>아래 요청을 처리하되 반드시 3단계로 진행하세요
+[초안]
+  먼저 최선을 다해 답변을 작성하세요
+[자기 비평]
+  방금 작성한 답변을 검토하고 아래를 솔직하게 답변하세요
+  - 가장 약한 부분은 어디인가요?
+  - 빠뜨린 중요한 내용이 있나요?
+  - 독자가 오해할 수 있는 부분이 있나요?
+[개선본]
+  비평을 반영한 최종 답변을 작성하세요
+
+요청 : "python으로 엑셀 파일을 읽어 HS Code별로 정렬하는 코드 작성"</div>
+    <div>
+      <p class="lead">한 번에 받은 코드는 오류가 나기 쉽습니다. 스스로 한 번 검토한 개선본은 <b>실행될 확률이 더 높아요.</b></p>
+      <p class="note">코드가 어렵다면 요청을 바꿔 보세요: "바이어에게 보낼 첫 인사 메일 작성"</p>
+    </div>
+  </div>
+  <div class="foot"><span>Practice 1</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="6">
+  <h2>실습 ② 점수 매기고, 낮으면 고치기</h2>
+  <div class="body g2">
+    <div class="prompt pre small-p"><span class="lab">실습 · 5가지 기준 평가<em class="where">📍 Gemini 새 채팅에 붙여넣기 → Enter</em></span>아래 문서를 작성하고 완성 후 5가지 기준으로 각각 10점 만점 평가를 수행하세요
+점수가 7점 미만인 항목은 반드시 개선하세요
+평가 기준 :
+① 명확성 : 한번에 이해되는가?
+② 완결성 : 필요한 내용이 모두 있는가?
+③ 정확성 : 틀린 내용이 없는가?
+④ 실용성 : 읽은 후 바로 실행할 수 있는가?
+⑤ 간결성 : 불필요한 내용이 없는가?
+
+요청 : "첫 수출을 준비하는 소기업을 위한 체크리스트 작성"</div>
+    <div>
+      <div class="score-demo">
+        <div><span>명확성</span><i style="width:80%"></i><b>8</b></div>
+        <div><span>완결성</span><i style="width:60%" class="low"></i><b>6 → 개선</b></div>
+        <div><span>정확성</span><i style="width:90%"></i><b>9</b></div>
+        <div><span>실용성</span><i style="width:70%"></i><b>7</b></div>
+        <div><span>간결성</span><i style="width:50%" class="low"></i><b>5 → 개선</b></div>
+      </div>
+      <p class="note">평가 기준은 내 목적에 맞게 바꿔도 됩니다. 숫자로 보면 어디를 고쳐야 할지 바로 보여요.</p>
+    </div>
+  </div>
+  <div class="foot"><span>Practice 2</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="6">
+  <h2>실제로는 이렇게 써요: 리플렉션</h2>
+  <div class="body g2">
+    <div class="panel">
+      <h3>💼 무역 업무에서</h3>
+      <ul class="list"><li>제안서·바이어 메일: <b>초안 → 자기 비평 → 개선본</b>을 한 번에</li><li><b>5가지 기준 점수</b>(명확성·설득력·정확성·톤·길이)로 품질 체크</li><li>내가 쓴 글을 넣고 "바이어 입장에서 비평" → 보내기 전 점검</li></ul>
+    </div>
+    <div>
+      <div class="prompt pre small-p"><span class="lab">💻 바이브 코딩에서<em class="where">📍 코드를 만든 Claude 채팅에 이어서 입력</em></span>방금 만든 코드를 스스로 검토해 주세요
+1) 초보 사용자가 헷갈릴 부분
+2) 버그가 날 수 있는 부분
+3) 모바일 화면에서 깨지는 부분
+각 항목을 10점 만점으로 점수를 매기고,
+7점 이하인 항목은 고쳐서 전체 코드를 다시 주세요</div>
+      <p class="note" style="margin-top:10px">사람이 "어디가 이상한지" 찾기 전에 <b>AI가 먼저 자기 코드를 리뷰</b>하게 하면 수정 횟수가 줄어요.</p>
+    </div>
+  </div>
+  <div class="foot"><span>In Practice</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="6">
+  <h2>추가 실습: AI vs AI 비평 대결</h2>
+  <div class="body g2">
+    <div>
+      <div class="steps tight">
+        <div><span class="n">1. Gemini</span><p>오른쪽 ① 보내기 → 자기소개 글 받기</p></div>
+        <div><span class="n">2. Claude</span><p><span class="url">claude.ai</span> 새 채팅에 ② + Gemini 글 붙여넣기 → 비평·점수</p></div>
+        <div><span class="n">3. Gemini</span><p>Claude 비평을 복사해 <b>1번 채팅</b>에 "이 비평대로 고쳐 줘"</p></div>
+        <div><span class="n">4. 비교</span><p>처음 글 vs 고친 글, 점수가 몇 점 올랐나?</p></div>
+      </div>
+    </div>
+    <div>
+      <div class="prompt pre small-p"><span class="lab">① 초안 쓰기<em class="where">📍 Gemini 새 채팅</em></span>무역회사 신입 공채 자기소개서의 "지원 동기" 문단을 써 주세요.
+나: 무역학과 4학년, 베트남 교환학생 6개월, 영어 중급
+분량: 300자</div>
+      <div class="prompt pre small-p" style="margin-top:10px"><span class="lab">② 비평하기<em class="where">📍 Claude 새 채팅</em></span>당신은 무역회사 인사팀장입니다. 아래 글을
+진정성 · 구체성 · 회사와의 연결 · 문장력 4가지로 각 10점 만점 평가하고
+가장 약한 부분 3곳을 "이렇게 바꾸면 좋다" 예시와 함께 알려 주세요.
+#글
+(Gemini가 쓴 글 붙여넣기)</div>
+    </div>
+  </div>
+  <div class="foot"><span>AI vs AI</span><span class="c"></span></div>
+</section>
+
+<section class="slide cover" data-sec="7">
+  <div class="big-no">17</div>
+  <div class="kicker">Outline Expansion</div>
+  <h1>아웃라인 확장 패턴</h1>
+  <p class="sub">큰 뼈대를 먼저 세우고, 필요한 곳만 살을 붙인다</p>
+  <div class="foot"><span>Outline</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="7">
+  <h2>한 번에 다 말고, 단계적으로</h2>
+  <div class="body g2">
+    <div class="tree">
+      <div class="t1">무역 실무자를 위한 python 자동화 8주</div>
+      <div class="t2">1주 · 2주 · 3주 · 4주 · <b>5주</b> · 6주 · 7주 · 8주</div>
+      <div class="t3">5주차 → 1일차 · 2일차 · <b>3일차</b> · 4일차 · 5일차</div>
+      <div class="t4">3일차 → 강의 스크립트 + 실습 코드 완성본</div>
+    </div>
+    <div>
+      <p class="lead">큰 주제를 한 번에 다 써 달라고 하면 얕고 길어집니다. <b>대주제 → 중주제 → 소주제</b>로 내려가며 필요한 부분만 자세히 받으세요.</p>
+      <p class="note">아무것도 모르는 일을 시작할 때 특히 좋습니다.</p>
+    </div>
+  </div>
+  <div class="foot"><span>Concept</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="7">
+  <h2>실습: 3단계로 펼치기</h2>
+  <div class="body g3">
+    <div class="prompt pre small-p"><span class="lab">1단계 · 대주제 아웃라인만<em class="where">📍 Gemini 새 채팅</em></span>아래 주제의 최상위 구조만 작성하세요
+각 항목의 제목과 한 줄 설명만 포함하세요
+세부 내용은 아직 작성하지 마세요
+주제 : "무역 실무자를 위한 python 자동화 8주 과정"</div>
+    <div class="prompt pre small-p"><span class="lab">2단계 · 선택한 파트 확장<em class="where">📍 같은 채팅에 이어서 (번호를 골라서)</em></span>5주차 상세 아웃라인을 확장하세요
+각 수업의 학습 목표, 실습 내용, 예상 소요 시간을 포함하세요</div>
+    <div class="prompt pre small-p"><span class="lab">3단계 · 최소 단위까지<em class="where">📍 같은 채팅에 이어서 입력</em></span>3일차 수업의 강의 스크립트와 실습 코드를 완성본으로 작성하세요</div>
+  </div>
+  <p class="note" style="font-size:18px!important">한 번에 다 붙이지 말고 <b>1단계 → 결과 확인 → 2단계 → 3단계</b> 순서로 보내세요. 몇 주차를 펼칠지는 내가 고릅니다.</p>
+  <div class="foot"><span>Practice</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="7">
+  <h2>비중(%)과 우선순위까지 받기</h2>
+  <div class="body g2">
+    <div class="prompt pre"><span class="lab">실습 · 비중 아웃라인<em class="where">📍 Gemini 새 채팅에 붙여넣기 → Enter</em></span>아래 교육 과정의 아웃라인을 작성하되
+각 파트에 전체 대비 비중(%)과 우선순위를 함께 표시하세요
+조건
+- 실습 코드가 이론 설명보다 비중이 높아야 한다
+- 수강생 기준 : python 기초 수료자
+- 총 교육 시간 : 40시간
+주제 : "무역 데이터 자동화 심화 과정"</div>
+    <div>
+      <p class="lead">전체 시간을 어디에 얼마나 써야 할지 <b>가중치</b>를 알려 줍니다.</p>
+      <p class="note">프로젝트를 할 때도 "제품군이 정해졌어. 어느 나라에, 누구에게, 어떻게 팔지 아웃라인과 작업 비중을 잡아줘"처럼 쓸 수 있어요.</p>
+    </div>
+  </div>
+  <div class="foot"><span>Weighting</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="7">
+  <h2>실제로는 이렇게 써요: 아웃라인 확장</h2>
+  <div class="body g2">
+    <div class="panel">
+      <h3>💼 무역 업무에서</h3>
+      <ul class="list"><li>보고서·사업계획서: <b>목차 먼저</b> 받고 → 섹션 하나씩 확장</li><li>수출 준비 일정: 큰 단계(시장조사·인증·바이어·선적) → 주차별 할 일</li><li><b>비중(%)</b>으로 발표 시간·분량 배분</li></ul>
+    </div>
+    <div>
+      <div class="prompt pre small-p"><span class="lab">💻 바이브 코딩에서<em class="where">📍 Claude 새 채팅에 붙여넣기 → 결과 확인 → 번호 골라 이어서</em></span>"수출 바이어 관리 웹앱"을 만들려고 해요. 아직 코드는 쓰지 마세요.
+1단계: 필요한 화면과 기능을 아웃라인(대주제 → 소주제)으로만 보여 주세요.
+각 기능에 [필수 / 나중에] 표시와 만드는 순서를 붙여 주세요.
+제가 번호를 고르면, 그 화면 하나만 코드로 만들어 주세요.</div>
+      <p class="note" style="margin-top:10px">큰 앱을 한 번에 만들라고 하면 <b>중간에 꼬여요</b>. 화면 목록을 먼저 잡고 하나씩 만드는 게 바이브 코딩의 기본 순서예요.</p>
+    </div>
+  </div>
+  <div class="foot"><span>In Practice</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="7">
+  <h2>추가 실습: 5분 발표 자료 뼈대 만들기</h2>
+  <div class="body g3">
+    <div class="prompt pre small-p"><span class="lab">1단계 · 아웃라인만<em class="where">📍 Gemini 새 채팅</em></span>주제: "우리 조가 베트남에 수출하고 싶은 한국 제품 소개"
+5분 발표 자료의 아웃라인을 대주제 4~5개로만 만들어 주세요.
+각 대주제에 시간 비중(%)을 붙여 주세요. 아직 내용은 쓰지 마세요.</div>
+    <div class="prompt pre small-p"><span class="lab">2단계 · 하나 펼치기<em class="where">📍 같은 채팅에 이어서</em></span>2번 대주제를 슬라이드 3장으로 확장해 주세요.
+장마다: 제목 / 핵심 문장 1개 / 넣을 그림·표 아이디어</div>
+    <div class="prompt pre small-p"><span class="lab">3단계 · 발표 대본<em class="where">📍 같은 채팅에 이어서</em></span>확장한 3장의 발표 대본을 써 주세요.
+장마다 40초 분량, 말하듯이 쉬운 문장으로.</div>
+  </div>
+  <p class="note" style="font-size:16px!important;margin-top:12px">주제를 <b>내 관심사</b>로 바꿔도 OK. 다음 조별 발표 때 이 순서 그대로 쓰면 됩니다.</p>
+  <div class="foot"><span>Outline Practice</span><span class="c"></span></div>
+</section>
+
+<section class="slide cover" data-sec="8">
+  <div class="big-no">18</div>
+  <div class="kicker">Context &amp; Infinite</div>
+  <h1>컨텍스트 관리자 · 무한 생성</h1>
+  <p class="sub">내 상황 안에서만 답하게, 같은 틀로 여러 개 찍어내게</p>
+  <div class="foot"><span>Context</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="8">
+  <h2>컨텍스트 관리자: 내 상황에 맞춘 답</h2>
+  <div class="body g2">
+    <div>
+      <p class="lead"><b>컨텍스트</b> = 상황, 맥락. AI가 세상의 일반론을 늘어놓지 않고 <b>내 상황 안에서만</b> 답하도록 방향을 잡아 줍니다.</p>
+      <ul class="list">
+        <li>회사 규모, 예산, 시간, 인력</li>
+        <li>집중할 것 / <b>무시할 것</b></li>
+      </ul>
+    </div>
+    <div class="prompt pre small-p"><span class="lab">컨텍스트 선언 블록 (틀)<em class="where">📍 참고용 (틀) · { } 안을 내 상황으로 채워서 사용</em></span>## 상황
+  {지금 처한 구체적 상황}
+## 나의 수준
+  {이 주제에 대한 사전 지식과 경험}
+## 목적
+  {이 답변으로 무엇을 결정하거나 실행할 것인가}
+## 제약
+  {시간, 예산, 인력, 기술적 한계}
+## 이 대화에서 원하지 않는 것
+  {답변에서 제외해야 할 방향이나 내용}</div>
+  </div>
+  <div class="foot"><span>Context Manager</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="8">
+  <h2>실습 ① 마케팅 이메일 분석·개선</h2>
+  <div class="body g2">
+    <div class="prompt pre small-p" style="font-size:12.8px;line-height:1.32"><span class="lab">실습 · 이메일 개선<em class="where">📍 Gemini 새 채팅에 붙여넣기 → Enter</em></span>#입력
+[이메일] =
+'''
+제목 : [제품명] 출시, 당신의 일상을 변화시킬 혁신적인 기술을 만나보세요!
+안녕하세요, [고객명]님
+여러분의 일상에 혁신을 가져올 새로운 기술, [제품명]이 드디어 출시되었습니다!
+최첨단 기술로 설계된 [제품명]은 당신의 생활을 한 단계 업그레이드해 줄 준비가 되어 있습니다.
+주요 특징 :
+- 초고속 처리 기능으로 시간 절약 가능
+- 사용자 친화적 인터페이스로 누구나 쉽게 사용
+- 지속 가능한 소재 사용으로 환경까지 생각한 디자인
+지금 바로 [웹사이트 링크]를 방문하셔서 자세한 정보를 확인해 보세요.
+[제품명]과 함께라면 당신의 일상이 더욱 특별해질 것입니다.
+감사합니다. [회사명] 드림
+'''
+#처리
+당신은 "마케팅 전문가"입니다.
+[이메일] 내용을 전문가의 시각에서 분석하고, 개선된 이메일을 작성해 주세요
+- 고객이 가장 관심을 가질 만한 제품 기능과 혜택에 대한 언급이 충분한지, 감정적 요소가 잘 드러나는지 문제점 위주로 분석하세요
+- 고객의 관심을 끌 수 있는 요소에 초점을 맞추고, 이메일의 길이나 문법적 정확성은 무시하세요
+#출력
+[분석 결과]
+[개선된 이메일]</div>
+    <div>
+      <p class="lead">"무엇에 집중하고 <b>무엇은 무시할지</b>"를 정해 주는 것이 컨텍스트 관리의 핵심입니다.</p>
+      <p class="note">[제품명], [고객명]은 바꿔 넣는 칸이에요. 여러 회사에 보낼 때 이 칸만 바꾸면 됩니다.</p>
+    </div>
+  </div>
+  <div class="foot"><span>Practice 1</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="8">
+  <h2>실습 ② 회사 상황을 먼저 고정하기</h2>
+  <div class="body g2">
+    <div class="prompt pre small-p" style="font-size:13.5px"><span class="lab">1단계 · 상황 먼저 보내기<em class="where">📍 Gemini 새 채팅에 먼저 보내기</em></span>아래 조건은 이 대화 전체에 적용됩니다
+모든 답변은 이 컨텍스트 안에서만 이루어지게 해 주세요
+## 회사 상황
+- 업종 : 의료기기 중소기업
+- 직원 : 30명, 무역팀 3명
+- 주요 수출국 : 미국(60%), 독일(30%), 기타(10%)
+- 연 수출액 : 약 50억원
+## 기술 환경
+- 현재 시스템 : ERP 없음, 엑셀 중심
+- 개발 인력 : 없음
+- IT 예산 : 월 100만원 이내
+## 절대 제외 사항
+- 대규모 시스템 도입 제안(ERP)
+- 개발자 고용 전제의 솔루션
+- 6개월 이상 구축 기간이 필요한 방안
+이 컨텍스트를 이해했으면 "준비 완료"라고만 답하세요</div>
+    <div>
+      <div class="prompt pre"><span class="lab">2단계 · "준비 완료" 후 질문<em class="where">📍 "준비 완료" 답이 오면 같은 채팅에</em></span>수출 서류 자동화 방법 알려줘</div>
+      <p class="note" style="margin-top:12px">ERP = 회사 업무를 통합 관리하는 큰 시스템. 하지 말라고 한 것은 빼고, 엑셀·저예산 위주로 답합니다. 조별 프로젝트 때 우리 조 상황을 이렇게 먼저 고정해 두세요.</p>
+    </div>
+  </div>
+  <div class="foot"><span>Practice 2</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="8">
+  <h2>무한 생성 패턴: 같은 틀, 여러 결과</h2>
+  <div class="body g2">
+    <div class="prompt pre small-p"><span class="lab">실습 · 무역 이메일 생성기<em class="where">📍 Gemini 새 채팅에 붙여넣기 → Enter</em></span>**무역 이메일 생성기**
+고정 프레임 :
+  "[수신자 유형]에게 [목적]을 전달하는 영문 이메일"
+변수 :
+  {수신자} : 신규 바이어 / 기존 거래처 / 포워더 / 관세사
+  {목적} : 첫 연락 / 견적 요청 / 납기 연장 / 클레임 대응
+  {톤} : 공식적인 / 친근한 / 긴급
+생성 규칙 :
+  3단락 구조, 제목 포함 150단어 이내
+위 변수 조합으로 이메일 4개를 생성해 주세요</div>
+    <div>
+      <p class="lead"><b>고정 틀 + 바뀌는 변수</b>로 결과물을 여러 개 한꺼번에 만듭니다.</p>
+      <ul class="list">
+        <li>연습용 가짜 데이터(더미) 여러 개 만들 때</li>
+        <li>"내가 '계속'이라고 하면 하나 더, '멈춰'라고 하면 끝"처럼 계속 생성도 가능</li>
+      </ul>
+      <p class="note">포워더 = 운송을 대신 처리해 주는 업체. 만들어진 이메일은 반드시 눈으로 확인하고 보내세요.</p>
+    </div>
+  </div>
+  <div class="foot"><span>Infinite Generation</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="8">
+  <h2>실제로는 이렇게 써요: 컨텍스트 · 무한 생성</h2>
+  <div class="body g2">
+    <div class="panel">
+      <h3>💼 무역 업무에서</h3>
+      <ul class="list"><li><b>컨텍스트</b>: 회사 규모·예산·제외 사항을 먼저 고정 → 우리 회사에 맞는 답만</li><li><b>무한 생성</b>: 바이어 유형 × 목적 × 톤 조합으로 메일 수십 개</li><li>조별 프로젝트: <b>우리 조 상황</b>을 첫 메시지로 고정해 두기</li></ul>
+    </div>
+    <div>
+      <div class="prompt pre small-p"><span class="lab">💻 바이브 코딩에서<em class="where">📍 Claude 새 채팅에 먼저 → "준비 완료" 후 같은 채팅에서 요청</em></span>## 프로젝트 상황
+- 만드는 것: 무역 용어 퀴즈 웹페이지
+- 나의 수준: 코딩 처음, HTML 파일 하나만 다룰 수 있음
+- 기술: HTML·CSS·JavaScript 한 파일, 설치가 필요한 것 금지
+## 원하지 않는 것
+- 서버, 데이터베이스, 로그인 기능
+- 어려운 전문 용어로 된 설명
+이 상황을 이 대화 내내 지켜 주세요. 이해했으면 "준비 완료"라고만 답하세요</div>
+      <p class="note" style="margin-top:10px">이 블록이 나중에 Claude Code의 <b>CLAUDE.md</b>(프로젝트 설명서)가 돼요. 퀴즈 문제 30개 같은 <b>더미 데이터</b>는 무한 생성으로!</p>
+    </div>
+  </div>
+  <div class="foot"><span>In Practice</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="8">
+  <h2>추가 실습: 상황 고정 전·후 비교 + 문제 은행 만들기</h2>
+  <div class="body g2">
+    <div>
+      <h3 style="margin-bottom:6px">① 컨텍스트 비교</h3>
+      <div class="steps tight">
+        <div><span class="n">A</span><p>Gemini 새 채팅: <b>"용돈 관리하는 방법 알려줘"</b>만 보내기</p></div>
+        <div><span class="n">B</span><p>또 다른 새 채팅: 오른쪽 상황 블록 보내고 → "준비 완료" 후 같은 질문</p></div>
+        <div><span class="n">C</span><p>A와 B 답 비교 → 무엇이 달라졌나?</p></div>
+      </div>
+      <p class="note" style="margin-top:10px"><b>② 무한 생성:</b> 게임 만든 Claude 채팅에 "무역 용어 문제를 '계속'이라고 할 때마다 5개씩 더 만들어 주고, '멈춰'라고 하면 지금까지 문제를 게임 코드에 넣어 줘"</p>
+    </div>
+    <div class="prompt pre small-p"><span class="lab">상황 블록 (내 걸로 바꾸기)<em class="where">📍 Gemini 새 채팅 (B) → "준비 완료" 후 같은 채팅에 질문</em></span>## 상황
+- 대학생, 자취 중, 한 달 용돈 60만 원
+- 아르바이트 주 2회
+## 목적
+- 3개월 안에 50만 원 모으기
+## 제약
+- 식비는 크게 줄이기 어려움
+## 원하지 않는 것
+- 주식·코인 투자 이야기, 뻔한 가계부 앱 추천
+이해했으면 "준비 완료"라고만 답하세요</div>
+  </div>
+  <div class="foot"><span>Context &amp; Generate</span><span class="c"></span></div>
+</section>
+
+<section class="slide cover" data-sec="9">
+  <div class="big-no">FW</div>
+  <div class="kicker">Frameworks</div>
+  <h1>프롬프트 프레임워크</h1>
+  <p class="sub">좋은 프롬프트의 규칙을 영어 첫 글자로 묶어 놓은 공식</p>
+  <div class="foot"><span>Frameworks</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="9">
+  <h2>프레임워크 한눈에</h2>
+  <div class="body">
+  <table class="t" style="font-size:16px">
+    <tr><th style="width:15%">이름</th><th>구성</th><th style="width:28%">이럴 때</th></tr>
+    <tr><td>5W1H</td><td>누가 · 무엇을 · 언제 · 어디서 · 왜 · 어떻게 (육하원칙)</td><td>상황 정리, 전략·보고서</td></tr>
+    <tr><td>CO-STAR</td><td>Context 상황 · Objective 목표 · Style 문체 · Tone 말투 · Audience 대상 · Response 결과물</td><td>제안서, 설득하는 글</td></tr>
+    <tr><td>FOCUS</td><td>Function 역할 · Objective 목표 · Context 상황 · Utility 활용처 · Specifications 세부 조건</td><td>마케팅 메시지·캠페인</td></tr>
+    <tr><td>ROSES</td><td>Role 역할 · Objective 목표 · Scenario 시나리오 · Expected Solution 기대 결과 · Steps 단계</td><td>협상, 시뮬레이션</td></tr>
+    <tr><td>RISEN</td><td>Role 역할 · Instructions 지시 · Steps 단계 · End goal 최종 목표 · Narrowing 범위 좁히기</td><td>문제 해결 절차</td></tr>
+    <tr><td>BAB</td><td>Before 이전 · After 이후 · Bridge 연결 방법</td><td>성공 스토리, 홍보 글</td></tr>
+  </table>
+  <p class="note">외울 필요는 없습니다. 잘 보면 다 어제 배운 역할 · 목표 · 상황 · 출력의 조합이에요.</p>
+  </div>
+  <div class="foot"><span>Overview</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="9">
+  <h2>실습 ① 5W1H: 유럽 시장 진출 전략</h2>
+  <div class="body g2">
+    <div class="prompt pre small-p"><span class="lab">실습 · 5W1H<em class="where">📍 Gemini 새 채팅 (Claude에서도 비교)</em></span>#입력
+[who] = 중소 제조업체 (직원 30명)
+[what] = 친환경 포장재를 유럽 시장에 수출
+[when] = 2026년 하반기부터 본격 수출 시작
+[where] = 독일, 프랑스, 네덜란드를 1차 타겟
+[why] = EU의 플라스틱 규제 강화로 친환경 포장재 수요 급증
+[how] = 현지 유통사 파트너십을 통한 B2B 판매
+#처리
+당신은 "EU 시장 진출 전문 컨설턴트"입니다
+상단의 5W1H 정보를 바탕으로 다음을 작성하세요
+1. 시장 진입 전략 (3가지 옵션 비교)
+2. 필수 인증 및 규제 대응 (CE마크 등)
+3. 바이어 발굴 및 파트너십 전략
+4. 6개월 실행 로드맵
+#출력
+[전략보고서] = 각 섹션별 300~500 단어</div>
+    <div>
+      <p class="lead">육하원칙에 맞춰 정보를 주면, 답도 그 안에서 정확하게 나옵니다.</p>
+      <p class="note">6개를 다 채우지 않아도 됩니다. 2~3개만 써도 효과가 있어요. B2B = 기업과 기업 사이 거래</p>
+    </div>
+  </div>
+  <div class="foot"><span>5W1H</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="9">
+  <h2>실습 ② CO-STAR: 바이어 설득 제안서</h2>
+  <div class="body g2">
+    <div class="prompt pre small-p"><span class="lab">실습 · CO-STAR<em class="where">📍 Gemini 새 채팅 (Claude에서도 비교)</em></span>Context : 미국 대형 유통사가 K-뷰티 제품 소싱을 고려 중입니다. 현재 중국 공급사와 거래 중이나, 품질 이슈로 대안을 찾고 있습니다
+Objective : 우리 회사를 신규 공급사로 선정하도록 설득하는 제안서를 작성하세요
+Style : 전문적이고 데이터 기반의 비즈니스 문서
+Tone : 자신감 있으면서도 파트너십을 강조하는 협력적 톤
+Audience : 미국 유통사의 소싱 디렉터 (40대, 15년 경력)
+Response :
+ * 영문 Business Proposal 형식
+ * 총 800~1000 단어
+ * Executive Summary, Company Profile, Product Advantages, Quality Assurance 포함
+ * 품질 비교 데이터 및 인증서 리스트 포함</div>
+    <div>
+      <p class="lead">마케팅·제안서에 가장 많이 쓰게 될 프레임워크입니다.</p>
+      <p class="note">소싱 = 물건을 사 올 공급처를 찾는 일. 영문 결과가 나오면 "한국어로 번역해줘"로 내용을 확인하세요. 데이터·인증서는 AI가 지어낼 수 있으니 실제 자료로 바꿔야 합니다.</p>
+    </div>
+  </div>
+  <div class="foot"><span>CO-STAR</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="9">
+  <h2>실습 ③ FOCUS: 바이어 발굴 메시지</h2>
+  <div class="body g2">
+    <div class="prompt pre small-p"><span class="lab">실습 · FOCUS<em class="where">📍 Gemini 새 채팅 (Claude에서도 비교)</em></span>Function : 당신은 글로벌 B2B 마케팅 전문가입니다. 신규 바이어 발굴을 위한 LinkedIn 메시지를 작성하세요
+Objective : 타겟 바이어의 답장률을 30% 이상으로 높이는 것이 목적
+Context : 우리 회사는 산업용 센서를 제조하며, 독일 자동차 부품 업체를 타겟으로 합니다. 가격 경쟁력과 빠른 납기가 강점입니다
+Utility : LinkedIn 메시지 캠페인에 활용됩니다
+Specifications :
+ - 메시지 길이 : 150~200단어
+ - 영문 작성
+ - 3가지 버전(공식적 / 친근함 / 문제 해결 중심)
+ - 각 버전마다 제목 포함</div>
+    <div>
+      <p class="lead">'어디에 쓸지(Utility)'와 '세부 조건(Specifications)'이 들어간 것이 특징입니다.</p>
+      <p class="note">LinkedIn = 직장인·기업용 SNS. 3가지 버전을 받는 건 어제 배운 대안 패턴과 같아요.</p>
+    </div>
+  </div>
+  <div class="foot"><span>FOCUS</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="9">
+  <h2>실습 ④ ROSES: 가격 협상 전략</h2>
+  <div class="body g2">
+    <div class="prompt pre small-p" style="font-size:13.5px"><span class="lab">실습 · ROSES<em class="where">📍 Gemini 새 채팅 (Claude에서도 비교)</em></span>Role : 당신은 국제 무역 협상 전문가입니다
+Objective : 미국 바이어와의 가격 협상에서 FOB $50/unit을 달성해야 합니다
+Scenario :
+ * 바이어 첫 제시가 : $40/unit
+ * 우리 희망가 : $50/unit
+ * 시장 평균가 : $45/unit
+ * 바이어 연간 예상 물량 : 50,000 units
+ * 경쟁사(중국 업체) 제시가 : $42/unit
+Expected Solution :
+ * 협상 전략 3단계
+ * 각 단계별 제시 가격 및 조건
+ * 양보 vs 가치 강조 밸런스
+ * 최종 합의 시나리오
+Steps :
+ 1. 현재 상황 분석
+ 2. 가치 제안 준비 (품질, 납기, 인증)
+ 3. 1차 협상 : 품질 차별화 강조, $55 제시
+ 4. 2차 협상 : 물량 증가 시 단계별 할인 제안 ($55-$53-$50)
+ 5. 계약서 작성 및 후속 조치
+#출력
+[협상 스크립트] = 각 단계별 대화 예시 (영문)
+[체크리스트] = 협상 전 준비 사항</div>
+    <div>
+      <p class="lead">숫자로 된 <b>시나리오</b>를 주고, 실제 협상 대화를 미리 연습해 볼 수 있습니다.</p>
+      <p class="note">FOB = 배에 실어 주는 것까지 판매자가 책임지는 가격 조건. 1차에 $55를 먼저 부르는 이유는 깎아 주는 것처럼 보이게 하기 위해서예요.</p>
+    </div>
+  </div>
+  <div class="foot"><span>ROSES</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="9">
+  <h2>실습 ⑤ RISEN · BAB: 빈칸을 직접 채워 보기</h2>
+  <div class="body g2">
+    <div class="prompt pre small-p"><span class="lab">RISEN · 무역 분쟁 해결 (빈칸 채우기)<em class="where">📍 빈칸을 채워서 Gemini 새 채팅에</em></span>Role : 당신은 국제 무역 분쟁 해결 전문가입니다
+Instructions : 바이어가 품질 불량을 이유로 대금 지급을 거부한 상황의 해결 방안을 제시하세요
+Steps : 1. 사실 확인 2. 증거 정리 3. 협상 4. 중재·소송 검토
+End goal : 거래 관계를 유지하면서 손실을 최소화
+Narrowing : 중소기업 기준, 변호사 비용 최소화, A4 1장 분량</div>
+    <div class="prompt pre small-p"><span class="lab">BAB · 수출 성공 스토리 (빈칸 채우기)<em class="where">📍 빈칸을 채워서 Gemini 새 채팅에</em></span>Before : 국내 판매만 하던 직원 20명 김 가공 회사, 매출 정체
+After : 2년 만에 미국·동남아 수출로 매출 40% 증가
+Bridge : 이 변화를 만든 과정(시장 조사, 인증, 바이어 발굴, 온라인 마케팅)을 홍보용 스토리로 작성해 주세요</div>
+  </div>
+  <div class="prompt pre" style="margin-top:16px"><span class="lab">실습 · 내 상황으로 빈칸 만들기<em class="where">📍 Gemini 새 채팅에 붙여넣기 → Enter</em></span>RISEN 프레임워크로 "(내가 해결하고 싶은 문제)" 프롬프트를 만들어 주세요. 각 칸을 채운 완성 프롬프트로 보여주세요.</div>
+  <div class="foot"><span>RISEN &amp; BAB</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="9">
+  <h2>실습 ⑥ 어떤 프레임워크를 쓸지 AI에게 묻기</h2>
+  <div class="body g2">
+    <div class="prompt pre"><span class="lab">실습 · 비교·추천받기<em class="where">📍 Gemini 새 채팅에 붙여넣기 → Enter</em></span>5W1H, CO-STAR, FOCUS, ROSES, RISEN, BAB 6가지 프롬프트 프레임워크를 비교해서
+각각 어떤 상황에 쓰는 것이 가장 좋은지 표로 정리해 주세요.
+무역 업무 예시를 하나씩 넣어 주세요.</div>
+    <div class="prompt pre"><span class="lab">실습 · 역질문으로 고르기<em class="where">📍 Gemini 새 채팅 → AI 질문에 같은 채팅에서 답하기</em></span>저는 (해결하고 싶은 문제)를 하려고 합니다.
+바로 답하지 말고, 어떤 프레임워크로 질문하는 것이 좋을지 먼저 추천하고
+그 프레임워크에 필요한 정보를 저에게 하나씩 질문해 주세요.</div>
+  </div>
+  <p class="note" style="font-size:18px!important">정답은 없습니다. 실제로는 CO-STAR처럼 흐름을 잡기 쉬운 것을 자주 쓰게 될 거예요. 중요한 건 형식보다 <b>의미를 정확히 전달</b>하는 것!</p>
+  <div class="foot"><span>Choose</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="9">
+  <h2>실제로는 이렇게 써요: 프레임워크</h2>
+  <div class="body g2">
+    <div class="panel">
+      <h3>💼 무역 업무에서</h3>
+      <ul class="list"><li><b>CO-STAR</b>: 바이어 설득 제안서 · <b>ROSES</b>: 가격 협상 전략</li><li><b>5W1H</b>: 시장 진출 계획 · <b>BAB</b>: 수출 성공 사례 소개글</li><li>팀에서 프레임워크 하나를 정해 두면 <b>보고서 형식이 통일</b></li></ul>
+    </div>
+    <div>
+      <div class="prompt pre small-p"><span class="lab">💻 바이브 코딩에서<em class="where">📍 Claude 새 채팅에 붙여넣기 → 결과 확인</em></span>R (역할): 비전공자를 돕는 친절한 웹 개발자
+I (지시): 바이어 연락처 메모장 웹페이지를 만들어 주세요
+S (단계): 1) 화면 구성 설명 3줄 2) 코드 작성 3) 사용 방법 3줄
+E (목표): 이름·국가·메모를 입력해 저장하고 아래 표로 보기
+N (제한): HTML 한 파일, 외부 라이브러리 금지, 화면은 한국어</div>
+      <p class="note" style="margin-top:10px">RISEN은 <b>코드 요청</b>에 특히 잘 맞아요. 역할·지시·단계·목표·제한 다섯 칸만 채우면 빠지는 정보가 없어요.</p>
+    </div>
+  </div>
+  <div class="foot"><span>In Practice</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="9">
+  <h2>추가 실습: 프레임워크 상황 카드 뽑기</h2>
+  <div class="body g2">
+    <div>
+      <p class="lead" style="margin-bottom:10px">상황 카드를 하나 골라 → <b>어떤 프레임워크</b>가 맞을지 먼저 맞혀 보세요.</p>
+      <div class="fwq" id="fwq"><button type="button" data-v="0">🧳 처음 보는 바이어에게 첫 연락 메시지</button><button type="button" data-v="1">📑 바이어를 설득할 제품 제안서</button><button type="button" data-v="2">💰 단가를 깎아 달라는 바이어와 협상 준비</button><button type="button" data-v="3">🌏 유럽 시장 진출 계획 세우기</button><button type="button" data-v="4">⚖️ 선적 지연 클레임 해결하기</button><button type="button" data-v="5">🏆 수출 성공 사례 SNS 소개글</button></div>
+    </div>
+    <div>
+      <div class="fw-ans"><div class="fw-k" id="fwK">?</div><div class="fw-w" id="fwW">왼쪽에서 상황 카드를 골라 보세요.</div></div>
+      <div class="prompt pre small-p" style="margin-top:12px"><span class="lab">맞혔으면 직접 써 보기<em class="where">📍 Gemini 새 채팅</em></span>상황: (고른 상황 카드)
+프레임워크: (정답 프레임워크)
+이 프레임워크의 각 항목을 저에게 하나씩 질문해서 채운 다음,
+완성된 프롬프트와 그 결과물을 함께 보여 주세요.</div>
+    </div>
+  </div>
+  <div class="foot"><span>Framework Cards</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="10">
+  <h2>오늘 배운 것 한눈에</h2>
+  <div class="body">
+  <table class="t">
+    <tr><th style="width:24%">패턴</th><th>한 줄 정리</th></tr>
+    <tr><td>⑫ 게임 플레이</td><td>목적·규칙·엔딩을 주면 AI가 장면별로 진행</td></tr>
+    <tr><td>⑬ 질문 개선</td><td>답 전에 내 질문을 분석·개선, 잘못된 전제 교정</td></tr>
+    <tr><td>⑭ 팩트 체크</td><td>🔴🟡🟢 검증 목록, 신뢰도 점수</td></tr>
+    <tr><td>⑮ 메타 언어</td><td>/요약 같은 나만의 단축 명령어</td></tr>
+    <tr><td>⑯ 리플렉션</td><td>초안 → 자기 비평 → 개선, 점수 매기기</td></tr>
+    <tr><td>⑰ 아웃라인 확장</td><td>대주제 → 중주제 → 소주제, 비중(%)</td></tr>
+    <tr><td>⑱⑲ 컨텍스트 · 무한 생성</td><td>내 상황 고정, 고정 틀 + 변수로 여러 개</td></tr>
+    <tr><td>프레임워크</td><td>5W1H · CO-STAR · FOCUS · ROSES · RISEN · BAB</td></tr>
+  </table>
+  </div>
+  <div class="foot"><span>Summary</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="10">
+  <h2>한 장 정리: 패턴 → 업무 → 바이브 코딩</h2>
+  <div class="body">
+  <table class="t small">
+    <tr><th style="width:20%">패턴</th><th>무역 업무에서</th><th>바이브 코딩에서</th></tr>
+    <tr><td>⑫ 게임 플레이</td><td>협상 롤플레이, 신입 교육 퀴즈</td><td>게임 규칙 = 앱 설계서</td></tr>
+    <tr><td>⑬ 질문 개선</td><td>막연한 지시를 조사 질문으로</td><td>"만들어 줘" 전에 요청문 다듬기</td></tr>
+    <tr><td>⑭ 팩트 체크</td><td>관세율·규정 확인 목록</td><td>코드 뒤 "직접 확인할 것" 신호등</td></tr>
+    <tr><td>⑮ 메타 언어</td><td>/메일 · /요약 팀 단축어</td><td>/수정 · /설명 · /점검</td></tr>
+    <tr><td>⑯ 리플렉션</td><td>초안 → 비평 → 개선본</td><td>AI가 자기 코드 셀프 리뷰</td></tr>
+    <tr><td>⑰ 아웃라인 확장</td><td>목차 먼저, 섹션별 확장</td><td>화면 목록 먼저, 하나씩 만들기</td></tr>
+    <tr><td>⑱⑲ 컨텍스트·무한 생성</td><td>회사 상황 고정, 메일 대량 생성</td><td>프로젝트 설명서(CLAUDE.md), 더미 데이터</td></tr>
+    <tr><td>프레임워크</td><td>CO-STAR 제안서, ROSES 협상</td><td>RISEN으로 코드 요청</td></tr>
+  </table>
+  </div>
+  <div class="foot"><span>Summary Map</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="10">
+  <h2>과제</h2>
+  <div class="body g2">
+    <div class="panel">
+      <h3>① 프롬프트 정리 사이트 업데이트</h3>
+      <p>어제 만든 HTML에 오늘 배운 패턴 ⑫~⑲와 프레임워크 6종을 추가하고 GitHub에 commit · push</p>
+      <p class="note">프레임워크는 Gemini에게 "각 프레임워크의 설명과 샘플 프롬프트를 만들어줘"라고 해서 정리해도 좋아요.</p>
+    </div>
+    <div class="panel flat">
+      <h3>② 도전: 나만의 동화책 만들기</h3>
+      <p>유니콘 스토리텔링 게임을 파이썬으로 만들고, OpenAI 또는 Google AI Studio API로 장면마다 그림을 생성해 마지막에 PDF로 저장</p>
+      <p class="note">두 API 중 어느 쪽 그림이 더 잘 나오는지도 비교해 보세요. 아이 이름·나이를 바꾸면 그에 맞는 그림과 이야기가 나오게!</p>
+    </div>
+  </div>
+  <div class="foot"><span>Assignment</span><span class="c"></span></div>
+</section>
+
+<section class="slide" data-sec="10">
+  <h2>과제 실습 순서: 정리 사이트 업데이트</h2>
+  <div class="body g2">
+    <div class="steps">
+      <div><span class="n">1. 열기</span><p>VS Code → <b>File → Open Folder</b> → 어제 만든 <b>prompt_site</b> 폴더</p></div>
+      <div><span class="n">2. 복사</span><p><b>index.html</b> 열기 → <kbd>Ctrl</kbd>+<kbd>A</kbd> → <kbd>Ctrl</kbd>+<kbd>C</kbd></p></div>
+      <div><span class="n">3. Claude</span><p>오른쪽 프롬프트 + 기존 코드 + 오늘 정리 내용 붙여넣기</p></div>
+      <div><span class="n">4. 교체</span><p>결과 코드 <b>복사</b> → VS Code에서 <kbd>Ctrl</kbd>+<kbd>A</kbd> → <kbd>Ctrl</kbd>+<kbd>V</kbd> → <kbd>Ctrl</kbd>+<kbd>S</kbd></p></div>
+      <div><span class="n">5. 올리기</span><p>브라우저로 확인 → 왼쪽 <b>소스 제어</b> → 메시지 "day2 추가" → <b>Commit</b> → <b>Sync/Push</b></p></div>
+    </div>
+    <div class="prompt pre small-p"><span class="lab">업데이트 요청 프롬프트<em class="where">📍 Claude 새 채팅 → 결과를 VS Code index.html에 교체</em></span>아래 기존 웹페이지에 새 섹션을 추가해 주세요
+#반드시
+- 기존 메뉴·내용·디자인은 절대 바꾸지 마세요
+#추가할 것
+- 왼쪽 메뉴에 "DAY 2 패턴" 과 "프레임워크" 추가
+- 각 패턴: 설명 2줄 + 예시 프롬프트(복사 버튼)
+#기존 코드
+'''
+(index.html 전체를 여기에 붙여넣기)
+'''
+#오늘 정리 내용
+'''
+(메모장 정리 내용 붙여넣기)
+'''
+#출력
+수정된 index.html 전체 코드</div>
+  </div>
+  <p class="note" style="font-size:16px!important;margin-top:10px">도전 과제(동화책 · API)는 VS Code에서 파이썬으로 해요. Claude에 "실행 방법까지 단계별로"라고 함께 요청하세요.</p>
+  <div class="foot"><span>Homework Steps</span><span class="c"></span></div>
+</section>
+
+<section class="slide end" data-sec="10">
+  <h1>잘 쓴 프롬프트 = 아낀 토큰</h1>
+  <p style="font-size:24px;opacity:.85;margin-top:18px;line-height:1.6">오늘 정리한 패턴과 프레임워크는 곧 시작할 바이브 코딩, MCP 연결, 자동화(n8n) 수업에서 그대로 꺼내 쓰게 됩니다.</p>
+  <div class="foot"><span>Prompt DAY 2</span><span class="c"></span></div>
+</section>
+
+</div></div>
+<div id="prog"></div>
+<nav id="bar" aria-label="슬라이드 이동">
+  <button id="btnToc" aria-label="목차 열기">목차</button>
+  <span id="secName"></span>
+  <span class="sp"></span>
+  <button id="prev" aria-label="이전 슬라이드">이전</button>
+  <span class="ct" id="count"></span>
+  <button id="next" aria-label="다음 슬라이드">다음</button>
+  <button id="btnBare" title="하단 막대 숨기기 (B)">막대 숨기기</button>
+  <button id="btnFs" title="전체 화면 (F)">전체 화면</button>
+</nav>
+<div id="toc" role="dialog" aria-label="목차"><h2>목차</h2><div class="grid" id="tocGrid"></div></div>
+<script>
+(function(){
+
+  const SECTIONS=["", "오리엔테이션", "게임 플레이", "질문 개선", "팩트 체크", "메타 언어", "리플렉션", "아웃라인 확장", "컨텍스트·무한 생성", "프레임워크", "마무리"];
+  const all=[...document.querySelectorAll('.slide')];
+  const stage=document.getElementById('stage'), vp=document.getElementById('viewport');
+  let idx=0, chan=null;
+  try{ chan=new BroadcastChannel('prompt-day2'); }catch(e){}
+  const bySec={};
+  all.forEach(s=>{(bySec[s.dataset.sec]=bySec[s.dataset.sec]||[]).push(s)});
+  Object.values(bySec).forEach(arr=>arr.forEach((s,i)=>{const c=s.querySelector('.foot .c'); if(c) c.textContent=String(i+1).padStart(2,'0')+' / '+String(arr.length).padStart(2,'0');}));
+  function fit(){ const sc=Math.min(vp.clientWidth/1280, vp.clientHeight/720)*0.96; stage.style.transform='scale('+sc+')'; }
+  function show(i, fromRemote){
+    idx=Math.max(0,Math.min(i,all.length-1));
+    all.forEach(s=>s.classList.remove('active'));
+    const cur=all[idx]; cur.classList.add('active');
+    document.getElementById('count').textContent=(idx+1)+' / '+all.length;
+    document.getElementById('secName').textContent=String(cur.dataset.sec).padStart(2,'0')+' '+SECTIONS[cur.dataset.sec];
+    document.getElementById('prog').style.width=((idx+1)/all.length*100)+'%';
+    history.replaceState(null,'','#'+(idx+1));
+    if(window.onShow) window.onShow(idx, fromRemote);
+  }
+  const grid=document.getElementById('tocGrid');
+  Object.keys(bySec).forEach(k=>{
+    const b=document.createElement('button');
+    b.innerHTML=String(k).padStart(2,'0')+' '+SECTIONS[k]+'<small>'+bySec[k].length+'장</small>';
+    b.onclick=()=>{show(all.indexOf(bySec[k][0]));toc(false)};
+    grid.appendChild(b);
+  });
+  const tocEl=document.getElementById('toc');
+  function toc(open){tocEl.classList.toggle('open',open===undefined?!tocEl.classList.contains('open'):open)}
+  document.getElementById('btnToc').onclick=()=>toc();
+  document.getElementById('prev').onclick=()=>show(idx-1);
+  document.getElementById('next').onclick=()=>show(idx+1);
+  document.getElementById('btnFs').onclick=()=>{ if(!document.fullscreenElement) document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen(); else document.exitFullscreen(); };
+  document.addEventListener('keydown',e=>{
+    if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA') return;
+    if(['ArrowRight','PageDown',' '].includes(e.key)){e.preventDefault();show(idx+1)}
+    else if(['ArrowLeft','PageUp'].includes(e.key)){e.preventDefault();show(idx-1)}
+    else if(e.key==='Home') show(0);
+    else if(e.key==='End') show(all.length-1);
+    else if(e.key==='m'||e.key==='M') toc();
+    else if(e.key==='Escape') toc(false);
+    else if(e.key==='f'||e.key==='F') document.getElementById('btnFs').click();
+    else if(window.onKey) window.onKey(e);
+  });
+  let tx=null;
+  vp.addEventListener('touchstart',e=>{tx=e.touches[0].clientX},{passive:true});
+  vp.addEventListener('touchend',e=>{ if(tx===null) return; const d=e.changedTouches[0].clientX-tx; if(Math.abs(d)>50) show(idx+(d<0?1:-1)); tx=null; });
+  const emit=(k,v)=>{ if(window.onDemo) window.onDemo(k,v); };
+
+  // 데모: 메타 언어 해석
+  const META={"/요약":"핵심만 <b>3줄</b>, 전문 용어 제거, 무역 실무자 기준, <b>결론 먼저 → 이유</b> 순서로 작성","/코드":"<b>python</b> 작성, 주석 한국어, 예외 처리 포함, 실행 가능한 완성 코드, <b>설명 없이 코드만</b>","/비교":"2~4개 대안을 <b>표</b>로 정리 (장점·단점·비용·난이도·추천 상황), 마지막 행에 <b>종합 추천</b>"};
+  const mi=document.getElementById('metaIn'), mo=document.getElementById('metaOut');
+  function metaRender(){
+    if(!mi) return;
+    const v=mi.value.trim(); const m=v.match(/^(\/\S+)\s*(.*)$/);
+    if(m && META[m[1]]){ mo.innerHTML='<b>'+m[1]+'</b> = '+META[m[1]]+'<br><br>대상 : '+(m[2]?m[2].replace(/[<>&]/g,''):'(질문을 입력하세요)'); }
+    else if(m){ mo.innerHTML='"'+m[1].replace(/[<>&]/g,'')+'"는 아직 정의하지 않은 단축어예요. 먼저 정의를 보내야 AI가 알아듣습니다.'; }
+    else { mo.innerHTML='단축어 없이 그냥 질문하면 AI가 형식을 마음대로 정합니다.'; }
+  }
+  if(mi){ mi.addEventListener('input',()=>{metaRender();emit('meta',mi.value);}); metaRender(); }
+  // 데모: 프레임워크 상황 카드
+  const FWO=[["FOCUS", "목적·대상·맥락을 짧게 정리해 핵심만 전달하는 첫 메시지에 좋아요."], ["CO-STAR", "맥락·목표·스타일·톤·대상·형식까지 정해 설득형 문서를 만들 때."], ["ROSES", "역할·목표·시나리오·해결책·단계로 협상 전략을 짜기 좋아요."], ["5W1H", "누가·언제·어디서·무엇을·왜·어떻게 — 계획을 빠짐없이."], ["RISEN", "역할·지시·단계·목표·제한으로 문제 해결 절차를 정리."], ["BAB", "Before → After → Bridge, 변화 이야기에 딱."]];
+  function fwSet(i){ const box=document.getElementById('fwq'); if(!box) return; [...box.children].forEach(b=>b.classList.toggle('on',+b.dataset.v===i)); document.getElementById('fwK').textContent='→ '+FWO[i][0]; document.getElementById('fwW').textContent=FWO[i][1]; }
+  (()=>{ const box=document.getElementById('fwq'); if(!box) return; [...box.children].forEach(b=>b.addEventListener('click',()=>{fwSet(+b.dataset.v);emit('fw',b.dataset.v);})); })();
+  function applyDemo(kind,v){ if(kind==='fw'){fwSet(+v);return;} if(kind==='meta'&&mi){mi.value=v;metaRender();} }
+  // 슬라이드 전체 복사
+  function copyText(txt,btn,label){
+    const ok=()=>{btn.textContent='복사됨 ✓';btn.classList.add('done');setTimeout(()=>{btn.textContent=label;btn.classList.remove('done');},1500);};
+    const fallback=()=>{const t=document.createElement('textarea');t.value=txt;t.style.position='fixed';t.style.opacity='0';document.body.appendChild(t);t.select();try{document.execCommand('copy');ok();}catch(e){}t.remove();};
+    if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(txt).then(ok,fallback);} else fallback();
+  }
+  document.querySelectorAll('.copyall').forEach(btn=>{
+    const label=btn.textContent;
+    btn.onclick=()=>{
+      const sl=btn.closest('.slide');
+      const parts=[...sl.querySelectorAll('.prompt')].map(p=>{const c=p.cloneNode(true);c.querySelectorAll('.lab,.cpy').forEach(x=>x.remove());return c.textContent.trim();});
+      copyText(parts.join('\n'),btn,label);
+    };
+  });
+  // 프롬프트 복사 버튼
+  document.querySelectorAll('.prompt').forEach(p=>{
+    const btn=document.createElement('button'); btn.className='cpy'; btn.type='button'; btn.textContent='복사'; btn.setAttribute('aria-label','프롬프트 복사');
+    btn.onclick=(ev)=>{
+      ev.stopPropagation();
+      const c=p.cloneNode(true); c.querySelectorAll('.lab,.cpy').forEach(x=>x.remove());
+      const txt=c.textContent.replace(/^\s+/,'').replace(/\s+$/,'');
+      const ok=()=>{btn.textContent='복사됨 ✓';btn.classList.add('done');setTimeout(()=>{btn.textContent='복사';btn.classList.remove('done');},1500);};
+      const fallback=()=>{const t=document.createElement('textarea');t.value=txt;t.style.position='fixed';t.style.opacity='0';document.body.appendChild(t);t.select();try{document.execCommand('copy');ok();}catch(e){}t.remove();};
+      if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(txt).then(ok,fallback);} else fallback();
+    };
+    p.appendChild(btn);
+  });
+  window.addEventListener('hashchange',()=>{const n=parseInt(location.hash.slice(1)); if(n>0&&n-1!==idx) show(n-1);});
+  window.addEventListener('resize',fit);
+
+  function bare(){document.body.classList.toggle('bare'); fit();}
+  document.getElementById('btnBare').onclick=bare;
+  window.onKey=e=>{ if(e.key==='b'||e.key==='B') bare(); };
+  if(chan) chan.onmessage=e=>{ const d=e.data||{}; if(d.type==='go') show(d.i,true); else if(d.type==='demo') applyDemo(d.kind,d.v); };
+  fit();
+  const h=parseInt(location.hash.slice(1)); show(h>0? h-1:0);
+})();
+</script>
+</body>
+</html>
