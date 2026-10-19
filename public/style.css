@@ -128,13 +128,83 @@ tr.picked td { background: var(--primary-soft); font-weight: 600; }
 .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--text); color: var(--bg); padding: 8px 16px; border-radius: 999px; font-weight: 600; z-index: 20; }
 .foot { text-align: center; font-size: 0.875rem; padding-top: 32px; padding-bottom: 32px; }
 
-/* ───── 휴대폰 (가로 768px 이하) ───── */
+/* ═════════════ 반응형 ═════════════ */
+
+/* 글자 크기가 화면 폭에 맞춰 자연스럽게 커지고 작아지게 */
+.top h1 { font-size: clamp(1.2rem, 1rem + 1.2vw, 1.6rem); }
+.final h2 { font-size: clamp(1.15rem, 1rem + 0.8vw, 1.5rem); }
+.box-title { flex-wrap: wrap; gap: 6px; }
+.toast { max-width: calc(100% - 32px); text-align: center; }
+.login-box { max-height: calc(100vh - 32px); overflow-y: auto; }
+
+/* 큰 모니터 (1440px 이상): 조금 더 넓게 */
+@media (min-width: 1440px) {
+  main, .top, .foot { max-width: 1280px; }
+}
+
+/* 태블릿 (769px ~ 1024px): 카드 2줄 배치 */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .rec-grid, .tech-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* 휴대폰 · 작은 태블릿 (가로 768px 이하) */
 @media (max-width: 768px) {
-  .top h1 { font-size: 1.25rem; }
   .tabs { width: 100%; }
-  .tab { flex: 1; }
+  .tab { flex: 1; min-height: 44px; }
   .rec-grid, .tech-grid { grid-template-columns: 1fr; }
   .two { grid-template-columns: 1fr; }
   .row .btn { flex: 1; }
   .card { padding: 16px; }
+  .forced { flex-wrap: wrap; }
+  .open-links .btn { flex: 1 1 100%; text-align: center; }
+  pre.prompt { max-height: 200px; }
+}
+
+/* 휴대폰 (가로 600px 이하): 채점표를 옆으로 넘기지 않고 카드처럼 세로로 */
+@media (max-width: 600px) {
+  .table-wrap { overflow-x: visible; }
+  .final table, .final thead, .final tbody, .final tr, .final td { display: block; width: 100%; }
+  .final thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .final tbody tr {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 4px 12px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+  }
+  .final td { border: 0; padding: 2px 0; text-align: left; white-space: normal; display: flex; justify-content: space-between; gap: 8px; }
+  .final td::before { color: var(--muted); font-weight: 600; }
+  .final td:nth-child(1) { display: none; }
+  .final td:nth-child(2) { grid-column: 1 / -1; font-weight: 700; min-width: 0; }
+  .final td:nth-child(2)::before { content: none; }
+  .final td:nth-child(3)::before { content: "명확성"; }
+  .final td:nth-child(4)::before { content: "완전성"; }
+  .final td:nth-child(5)::before { content: "실행 가능성"; }
+  .final td:nth-child(6)::before { content: "품질 유도력"; }
+  .final td:nth-child(7) { grid-column: 1 / -1; border-top: 1px dashed var(--line); padding-top: 6px; }
+  .final td:nth-child(7)::before { content: "총점"; }
+  .final tr.picked td { background: none; }
+  .final tr.picked { background: var(--primary-soft); border-color: var(--primary); }
+}
+
+/* 작은 휴대폰 (가로 400px 이하): 여백 줄이기 */
+@media (max-width: 400px) {
+  main, .top, .foot { padding-left: 12px; padding-right: 12px; }
+  .card { padding: 14px; border-radius: 12px; }
+  .rec-head { flex-wrap: wrap; }
+  .score b { font-size: 1.25rem; }
+  .chip { padding: 6px 12px; }
+}
+
+/* 휴대폰을 가로로 눕혔을 때: 로그인 창이 잘리지 않게 */
+@media (max-height: 480px) and (orientation: landscape) {
+  .overlay { align-items: start; overflow-y: auto; }
+}
+
+/* 움직임 줄이기 설정을 켠 사용자: 애니메이션·부드러운 스크롤 끄기 */
+@media (prefers-reduced-motion: reduce) {
+  .spinner { animation-duration: 2s; }
+  * { scroll-behavior: auto !important; }
 }
