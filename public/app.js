@@ -135,6 +135,7 @@ $("taskForm").addEventListener("submit", async (e) => {
   $("final").hidden = true;
   $("recommendBtn").disabled = true;
   showStatus(forcedIds.length ? "고른 기법으로 프롬프트를 만드는 중…" : "어울리는 기법을 고르는 중… (10~40초)");
+  $("status").scrollIntoView({ behavior: "smooth", block: "center" });
   try {
     const data = await api("/api/recommend", { ...lastInput, techniques: forcedIds });
     hideStatus();
@@ -174,6 +175,7 @@ function renderDashboard(data) {
   });
   $("recCards").replaceChildren(...cards);
   $("dashboard").hidden = false;
+  $("dashboard").scrollIntoView({ behavior: "smooth", block: "start" }); // 휴대폰에서 결과가 바로 보이게
   if (!cards.length) showStatus("⚠️ 추천 결과가 비어 있어요. 다시 시도해 주세요.", true);
 }
 

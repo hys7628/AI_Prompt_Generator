@@ -165,6 +165,34 @@ tr.picked td { background: var(--primary-soft); font-weight: 600; }
   pre.prompt { max-height: 200px; }
 }
 
+/* ═════════════ 휴대폰 우선 사용 (가로 768px 이하) ═════════════ */
+@media (max-width: 768px) {
+  /* 탭을 화면 아래에 고정 → 엄지로 바로 누르기 */
+  .tabs {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 9;
+    border-radius: 0; border-width: 1px 0 0; padding: 6px 12px;
+    padding-bottom: calc(6px + env(safe-area-inset-bottom));
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.06);
+  }
+  .tab { min-height: 48px; font-size: 1rem; }
+  body { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
+  .top { padding-top: calc(16px + env(safe-area-inset-top)); }
+  .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
+
+  /* 손가락으로 누르기 좋은 크기 (44px 이상) */
+  .btn.small { min-height: 44px; padding: 8px 14px; }
+  .chip { min-height: 40px; }
+  .tech details summary { padding: 8px 0; }
+
+  /* 주제 버튼은 한 줄로, 옆으로 밀어서 보기 */
+  .chips { flex-wrap: nowrap; overflow-x: auto; scroll-snap-type: x proximity; margin: 0 -16px; padding: 0 16px 4px; scrollbar-width: none; }
+  .chips::-webkit-scrollbar { display: none; }
+  .chip { flex: 0 0 auto; scroll-snap-align: start; }
+
+  /* 결과로 자동 스크롤할 때 위쪽에 여유 */
+  #status, #dashboard, #final, .topic { scroll-margin-top: 12px; }
+}
+
 /* 휴대폰 (가로 600px 이하): 채점표를 옆으로 넘기지 않고 카드처럼 세로로 */
 @media (max-width: 600px) {
   .table-wrap { overflow-x: visible; }

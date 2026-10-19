@@ -1,0 +1,12 @@
+{
+  "name": "AI 프롬프트 생성기",
+  "short_name": "프롬프트",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f5f7fb",
+  "theme_color": "#2f6fed",
+  "lang": "ko",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
