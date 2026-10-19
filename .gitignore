@@ -1,10 +1,8 @@
 # 비밀 정보 (절대 GitHub에 올리지 않기)
 .env
 
-# 파이썬 가상환경 · 캐시
-.venv/
-__pycache__/
-*.pyc
+# 설치한 라이브러리 (npm install 하면 다시 생김)
+node_modules/
 .DS_Store
 
 # Claude Code 개인 설정

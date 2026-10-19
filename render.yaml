@@ -3,12 +3,13 @@
 services:
   - type: web
     name: ai-prompt-generator
-    runtime: python
+    runtime: node
     plan: free
-    buildCommand: pip install -r requirements.txt
-    # AI 응답이 길게 걸릴 수 있어 timeout을 120초로
-    startCommand: gunicorn app:app --timeout 120 --workers 1 --threads 4
+    buildCommand: npm install
+    startCommand: npm start
     envVars:
+      - key: NODE_VERSION
+        value: "22"
       - key: OPENAI_MODEL
         value: gpt-6.1-sol-light
       - key: OPENAI_API_KEY

@@ -15,20 +15,21 @@ DAY1~3 프롬프트 엔지니어링 수업 자료(`prompt-day1~3.html`)의 기�
 
 | 파일 | 하는 일 |
 |---|---|
-| `app.py` | Flask 서버. OpenAI 호출, 비밀번호 확인 |
-| `techniques.py` | DAY1~3 기법 목록 (여기에 추가하면 화면과 추천에 모두 반영) |
-| `static/` | 화면 (index.html · style.css · app.js), 반응형 |
+| `server.js` | Node.js(Express) 서버. OpenAI 호출, 비밀번호 확인 |
+| `techniques.js` | DAY1~3 기법 목록 (여기에 추가하면 화면과 추천에 모두 반영) |
+| `public/` | 화면 (index.html · style.css · app.js), 반응형 |
+| `package.json` | 필요한 라이브러리(express, openai)와 실행 명령 |
 | `render.yaml` | Render 배포 설정 |
 | `.env.example` | 내 컴퓨터에서 실행할 때 쓰는 환경변수 예시 |
 
 ## 내 컴퓨터에서 실행
 
+[Node.js](https://nodejs.org) 22 이상이 필요해요.
+
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
+npm install            # 라이브러리 설치 (처음 한 번)
 cp .env.example .env   # .env 를 열어 키와 비밀번호 채우기
-python app.py          # http://localhost:5000
+npm start              # http://localhost:5000
 ```
 
 ## Render 배포
